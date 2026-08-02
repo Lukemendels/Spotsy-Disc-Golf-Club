@@ -1,0 +1,23 @@
+{
+  "name": "Spotsy Disc Golf Digital Platform",
+  "short_name": "Spotsy Disc Golf",
+  "description": "Spotsylvania County Disc Golf Club Events, Casual Rounds, Course Directory & Member Portal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1593111774601-dfbce7de160c?auto=format&fit=crop&w=192&q=80",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1593111774601-dfbce7de160c?auto=format&fit=crop&w=512&q=80",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

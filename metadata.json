@@ -1,0 +1,6 @@
+{
+  "name": "Spotsy Disc Golf Digital Platform",
+  "description": "Responsive PWA for Spotsy Disc Golf Club featuring events, casual rounds board with live chat, course directory, club membership details, officer directory, beginner guides, and admin panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

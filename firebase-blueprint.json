@@ -1,0 +1,32 @@
+{
+  "collections": [
+    {
+      "id": "events",
+      "description": "Official Spotsy Disc Golf Club events"
+    },
+    {
+      "id": "courses",
+      "description": "Local disc golf courses in Spotsylvania area"
+    },
+    {
+      "id": "rounds",
+      "description": "Casual rounds organized by players"
+    },
+    {
+      "id": "users",
+      "description": "User profiles and permissions"
+    },
+    {
+      "id": "officers",
+      "description": "Club officer directory"
+    },
+    {
+      "id": "beginnerSignups",
+      "description": "Submissions from beginners interested in learning"
+    },
+    {
+      "id": "announcementSubscriptions",
+      "description": "Club email newsletter subscriptions"
+    }
+  ]
+}
