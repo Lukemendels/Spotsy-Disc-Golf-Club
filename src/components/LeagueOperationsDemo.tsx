@@ -176,6 +176,7 @@ function importUDiscCsv(text: string): {
     .map((values, rowIndex) => ({ values, rowIndex }))
     .filter(({ values }) => values[nameIndex]?.trim())
     .filter(({ values }) => normalizeHeader(values[nameIndex]) !== "par")
+    .filter(({ values }) => values[scoreIndex]?.trim() !== "")
     .map(({ values, rowIndex }) => {
       const score = Number(values[scoreIndex]);
       return {
@@ -191,8 +192,8 @@ function importUDiscCsv(text: string): {
     return { results: [], error: "No player rows with numeric scores were found in the CSV." };
   }
 
-  // Some UDisc exports may contain more than one row per player/round set. For a
-  // single league-round export, duplicate names are ambiguous, so fail visibly.
+  // A multi-round export can repeat player names. That is ambiguous for a single
+  // bag-tag exchange, so fail visibly rather than guessing which round to use.
   const names = imported.map((result) => result.name.toLowerCase());
   const duplicateName = names.find((name, index) => names.indexOf(name) !== index);
   if (duplicateName) {
