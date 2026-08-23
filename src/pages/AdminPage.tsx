@@ -22,6 +22,8 @@ interface AdminPageProps {
   onRefresh?: () => void;
 }
 
+type AdminTab = "leagueOps" | "events" | "rounds" | "beginnerSignups" | "subs" | "seed";
+
 export const AdminPage: React.FC<AdminPageProps> = ({
   events,
   rounds,
@@ -32,8 +34,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   const isAdmin = userProfile?.role === "club_admin";
 
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState<"leagueOps" | "events" | "rounds" | "beginnerSignups" | "subs" | "seed">("leagueOps");
-  
+  const [activeSubTab, setActiveSubTab] = useState<AdminTab>("leagueOps");
   const [beginnerSignups, setBeginnerSignups] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [loadingSignups, setLoadingSignups] = useState(false);
@@ -118,6 +119,15 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     );
   }
 
+  const tabs: Array<{ id: AdminTab; label: string }> = [
+    { id: "leagueOps", label: "League Night Ops · Demo" },
+    { id: "events", label: `Manage Events (${events.length})` },
+    { id: "rounds", label: `Moderation / Rounds (${rounds.length})` },
+    { id: "beginnerSignups", label: "Beginner Signups" },
+    { id: "subs", label: "Newsletter Emails" },
+    { id: "seed", label: "Database Tools" },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -131,26 +141,29 @@ export const AdminPage: React.FC<AdminPageProps> = ({
             Prototype organizer tools for league-night operations, official events, casual rounds, beginner signups, and club communications.
           </p>
         </div>
-        <button onClick={() => setIsEventModalOpen(true)} className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-xs flex items-center gap-1.5 shrink-0">
-          <Plus className="w-4 h-4" /><span>New Official Event</span>
+        <button
+          onClick={() => setIsEventModalOpen(true)}
+          className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-xs flex items-center gap-1.5 shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          <span>New Official Event</span>
         </button>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200 card-shadow text-xs font-bold">
-        {[
-          ["leagueOps", "League Night Ops · Demo"],
-          ["events", `Manage Events (${events.length})`],
-          ["rounds", `Moderation / Rounds (${rounds.length})`],
-          ["beginnerSignups", "Beginner Signups"],
-          ["subs", "Newsletter Emails"],
-          ["seed", "Database Tools"],
-        ].map(([id, label]) => (
+        {tabs.map((tab) => (
           <button
-            key={id}
-            onClick={() => setActiveSubTab(id as typeof activeSubTab)}
-            className={`px-3 py-1.5 rounded-lg transition ${activeSubTab === id ? (id === "leagueOps" ? "bg-amber-500 text-slate-950" : "bg-slate-900 text-white") : "text-slate-600 hover:bg-slate-100"}`}
+            key={tab.id}
+            onClick={() => setActiveSubTab(tab.id)}
+            className={`px-3 py-1.5 rounded-lg transition ${
+              activeSubTab === tab.id
+                ? tab.id === "leagueOps"
+                  ? "bg-amber-500 text-slate-950"
+                  : "bg-slate-900 text-white"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
           >
-            {label}
+            {tab.label}
           </button>
         ))}
       </div>
@@ -161,11 +174,19 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-slate-900">Official Events Directory</h3>
-            <button onClick={() => setIsEventModalOpen(true)} className="text-xs text-green-700 font-bold hover:underline">+ Create Event</button>
+            <button
+              onClick={() => setIsEventModalOpen(true)}
+              className="text-xs text-green-700 font-bold hover:underline"
+            >
+              + Create Event
+            </button>
           </div>
           <div className="grid grid-cols-1 gap-2.5">
             {events.map((evt) => (
-              <div key={evt.id} className="bg-white border border-slate-200 p-4 rounded-xl card-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div
+                key={evt.id}
+                className="bg-white border border-slate-200 p-4 rounded-xl card-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+              >
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[10px] bg-green-100 text-green-800 border border-green-200 px-2 py-0.5 rounded font-bold uppercase">{evt.category}</span>
@@ -174,8 +195,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                   <h4 className="font-bold text-slate-900 text-sm">{evt.title}</h4>
                   <p className="text-xs text-slate-500 line-clamp-1">{evt.description}</p>
                 </div>
-                <button onClick={() => handleDeleteEvent(evt.id)} className="bg-rose-50 hover:bg-rose-100 text-rose-700 p-1.5 rounded-lg border border-rose-200 text-xs flex items-center gap-1 shrink-0 font-bold">
-                  <Trash2 className="w-3.5 h-3.5" /><span>Delete</span>
+                <button
+                  onClick={() => handleDeleteEvent(evt.id)}
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 p-1.5 rounded-lg border border-rose-200 text-xs flex items-center gap-1 shrink-0 font-bold"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete</span>
                 </button>
               </div>
             ))}
@@ -188,7 +213,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({
           <h3 className="text-base font-bold text-slate-900">Casual Round Posts Queue</h3>
           <div className="grid grid-cols-1 gap-2.5">
             {rounds.map((rnd) => (
-              <div key={rnd.id} className="bg-white border border-slate-200 p-4 rounded-xl card-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div
+                key={rnd.id}
+                className="bg-white border border-slate-200 p-4 rounded-xl card-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+              >
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded uppercase font-bold">{rnd.status}</span>
@@ -197,8 +225,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                   <h4 className="font-bold text-slate-900 text-sm">Course ID: {rnd.courseId} ({rnd.layout})</h4>
                   <p className="text-xs text-slate-500">Tee: {new Date(rnd.teeTime).toLocaleString()} | Players: {rnd.participantIds?.length}/{rnd.maxCapacity}</p>
                 </div>
-                <button onClick={() => handleDeleteRound(rnd.id)} className="bg-rose-50 hover:bg-rose-100 text-rose-700 p-1.5 rounded-lg border border-rose-200 text-xs flex items-center gap-1 shrink-0 font-bold">
-                  <Trash2 className="w-3.5 h-3.5" /><span>Remove Post</span>
+                <button
+                  onClick={() => handleDeleteRound(rnd.id)}
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 p-1.5 rounded-lg border border-rose-200 text-xs flex items-center gap-1 shrink-0 font-bold"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove Post</span>
                 </button>
               </div>
             ))}
@@ -209,12 +241,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       {activeSubTab === "beginnerSignups" && (
         <div className="space-y-3">
           <h3 className="text-base font-bold text-slate-900">Beginner Clinic & Loaner Submissions</h3>
-          {loadingSignups ? <p className="text-slate-500 text-xs italic">Loading signups from Firestore...</p> : beginnerSignups.length === 0 ? <p className="text-slate-500 text-xs italic">No beginner signups submitted yet.</p> : (
+          {loadingSignups ? (
+            <p className="text-slate-500 text-xs italic">Loading signups from Firestore...</p>
+          ) : beginnerSignups.length === 0 ? (
+            <p className="text-slate-500 text-xs italic">No beginner signups submitted yet.</p>
+          ) : (
             <div className="grid grid-cols-1 gap-2.5">
               {beginnerSignups.map((s) => (
                 <div key={s.id} className="bg-white border border-slate-200 p-4 rounded-xl card-shadow space-y-1">
-                  <div className="flex justify-between items-center text-xs"><span className="font-bold text-slate-900 text-sm">{s.name}</span><span className="text-slate-500">{s.email}</span></div>
-                  <p className="text-xs text-green-700 font-semibold">Experience: {s.experience}</p><p className="text-xs text-slate-600">Interest: {s.interest}</p>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-slate-900 text-sm">{s.name}</span>
+                    <span className="text-slate-500">{s.email}</span>
+                  </div>
+                  <p className="text-xs text-green-700 font-semibold">Experience: {s.experience}</p>
+                  <p className="text-xs text-slate-600">Interest: {s.interest}</p>
                 </div>
               ))}
             </div>
@@ -225,21 +265,44 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       {activeSubTab === "subs" && (
         <div className="space-y-3">
           <h3 className="text-base font-bold text-slate-900">Newsletter Email List</h3>
-          {loadingSignups ? <p className="text-slate-500 text-xs italic">Loading subscribers from Firestore...</p> : subscriptions.length === 0 ? <p className="text-slate-500 text-xs italic">No newsletter subscriptions yet.</p> : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">{subscriptions.map((s) => <div key={s.id} className="bg-white border border-slate-200 p-3 rounded-lg text-xs font-mono text-slate-800 card-shadow">{s.email}</div>)}</div>
+          {loadingSignups ? (
+            <p className="text-slate-500 text-xs italic">Loading subscribers from Firestore...</p>
+          ) : subscriptions.length === 0 ? (
+            <p className="text-slate-500 text-xs italic">No newsletter subscriptions yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {subscriptions.map((s) => (
+                <div key={s.id} className="bg-white border border-slate-200 p-3 rounded-lg text-xs font-mono text-slate-800 card-shadow">{s.email}</div>
+              ))}
+            </div>
           )}
         </div>
       )}
 
       {activeSubTab === "seed" && (
         <div className="bg-white border border-slate-200 p-5 rounded-xl space-y-3 max-w-xl card-shadow">
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2"><RefreshCw className="w-5 h-5 text-amber-600" /> Database Seeding Utility</h3>
-          <p className="text-xs text-slate-600 leading-relaxed">Clicking the button below will verify Firestore collections (`courses`, `officers`, `events`, `rounds`) and populate default Spotsy Disc Golf records if missing.</p>
-          <button onClick={handleTriggerSeed} className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-xs flex items-center gap-2"><RefreshCw className="w-3.5 h-3.5" /><span>Seed Default Firestore Records</span></button>
+          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <RefreshCw className="w-5 h-5 text-amber-600" /> Database Seeding Utility
+          </h3>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Clicking the button below will verify Firestore collections (`courses`, `officers`, `events`, `rounds`) and populate default Spotsy Disc Golf records if missing.
+          </p>
+          <button
+            onClick={handleTriggerSeed}
+            className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-xs flex items-center gap-2"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Seed Default Firestore Records</span>
+          </button>
         </div>
       )}
 
-      <CreateEventModal courses={courses} isOpen={isEventModalOpen} onClose={() => setIsEventModalOpen(false)} onSuccess={onRefresh} />
+      <CreateEventModal
+        courses={courses}
+        isOpen={isEventModalOpen}
+        onClose={() => setIsEventModalOpen(false)}
+        onSuccess={onRefresh}
+      />
     </div>
   );
 };
