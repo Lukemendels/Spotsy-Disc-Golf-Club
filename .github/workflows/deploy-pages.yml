@@ -1,5 +1,6 @@
 name: Deploy to GitHub Pages
 
+# Manual/source-setting retriggers are safe: every push to main rebuilds and redeploys.
 on:
   push:
     branches: [main]
