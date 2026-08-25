@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Sidebar } from "./components/Sidebar";
 import { Header } from "./components/Header";
@@ -13,82 +13,23 @@ import { CoursesPage } from "./pages/CoursesPage";
 import { ClubOpsPage } from "./pages/ClubOpsPage";
 import { LeadershipPage } from "./pages/LeadershipPage";
 import { AdminPage } from "./pages/AdminPage";
-
-import {
-  INITIAL_COURSES,
-  INITIAL_OFFICERS,
-  INITIAL_EVENTS,
-  INITIAL_ROUNDS,
-  seedFirestoreIfEmpty,
-} from "./data/seedData";
-import { db } from "./lib/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
-import { Event, Officer, Round } from "./types";
+import { INITIAL_COURSES, INITIAL_OFFICERS, INITIAL_EVENTS, INITIAL_ROUNDS } from "./data/seedData";
+import { Event } from "./types";
 import { Check, Calendar, Users, GraduationCap, Sparkles, MapPin, UserCheck, ShieldAlert, Home, Wrench } from "lucide-react";
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<string>("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Courses intentionally stay on the verified static reference list for this concept demo.
-  // The original Firestore collection contains Gemini-generated seed records and must not
-  // override the audited directory shown to club leadership.
+  // This public build is a leadership concept demo. Keep displayed club facts on the
+  // audited reference data rather than reading the original Gemini-generated seed records.
   const courses = INITIAL_COURSES;
-  const [officers, setOfficers] = useState<Officer[]>(INITIAL_OFFICERS);
+  const officers = INITIAL_OFFICERS;
+  const rounds = INITIAL_ROUNDS;
   const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
-  const [rounds, setRounds] = useState<Round[]>(INITIAL_ROUNDS);
 
   const { userProfile } = useAuth();
   const isAdmin = userProfile?.role === "club_admin";
-
-  useEffect(() => {
-    seedFirestoreIfEmpty();
-
-    const unsubOfficers = onSnapshot(
-      collection(db, "officers"),
-      (snap) => {
-        if (!snap.empty) {
-          const list: Officer[] = [];
-          snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Officer));
-          setOfficers(list);
-        }
-      },
-      (err) => console.warn("Officers listener warning:", err)
-    );
-
-    const unsubEvents = onSnapshot(
-      collection(db, "events"),
-      (snap) => {
-        if (!snap.empty) {
-          const list: Event[] = [];
-          snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Event));
-          setEvents((current) => {
-            const localDemoEvents = current.filter((event) => event.isDemo && event.id.startsWith("demo-event-"));
-            return [...localDemoEvents, ...list];
-          });
-        }
-      },
-      (err) => console.warn("Events listener warning:", err)
-    );
-
-    const unsubRounds = onSnapshot(
-      collection(db, "rounds"),
-      (snap) => {
-        if (!snap.empty) {
-          const list: Round[] = [];
-          snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() } as Round));
-          setRounds(list);
-        }
-      },
-      (err) => console.warn("Rounds listener warning:", err)
-    );
-
-    return () => {
-      unsubOfficers();
-      unsubEvents();
-      unsubRounds();
-    };
-  }, []);
 
   const handleJoinRoundFromHome = () => setActiveTab("rounds");
   const handleCreateDemoEvent = (event: Event) => {
