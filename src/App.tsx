@@ -19,14 +19,9 @@ import { Event } from "./types";
 import { Check, Calendar, Users, GraduationCap, Sparkles, MapPin, UserCheck, ShieldAlert, Home, Wrench } from "lucide-react";
 
 function AppContent() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.has("leagueCheckIn")) return <LeagueCheckInPage />;
-
   const [activeTab, setActiveTab] = useState<string>("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // This public build is a leadership concept demo. Keep displayed club facts on the
-  // audited reference data rather than reading the original Gemini-generated seed records.
   const courses = INITIAL_COURSES;
   const officers = INITIAL_OFFICERS;
   const rounds = INITIAL_ROUNDS;
@@ -36,9 +31,7 @@ function AppContent() {
   const isAdmin = userProfile?.role === "club_admin";
 
   const handleJoinRoundFromHome = () => setActiveTab("rounds");
-  const handleCreateDemoEvent = (event: Event) => {
-    setEvents((current) => [event, ...current.filter((item) => item.id !== event.id)]);
-  };
+  const handleCreateDemoEvent = (event: Event) => setEvents((current) => [event, ...current.filter((item) => item.id !== event.id)]);
 
   const navItems = [
     { id: "home", label: "Dashboard", icon: Home },
@@ -56,7 +49,6 @@ function AppContent() {
   return (
     <div className="flex h-screen w-full bg-slate-50 text-slate-800 overflow-hidden font-sans">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-
       <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         <PWAInstaller />
         <Header events={events} activeTab={activeTab} setActiveTab={setActiveTab} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
@@ -93,12 +85,12 @@ function AppContent() {
           <span className="text-[10px] text-slate-400 font-mono hidden md:block">Spotsy Disc Golf Digital Platform</span>
         </footer>
       </main>
-
       <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   );
 }
 
 export default function App() {
-  return <AuthProvider><AppContent /></AuthProvider>;
+  const isLeagueCheckIn = new URLSearchParams(window.location.search).has("leagueCheckIn");
+  return <AuthProvider>{isLeagueCheckIn ? <LeagueCheckInPage /> : <AppContent />}</AuthProvider>;
 }
