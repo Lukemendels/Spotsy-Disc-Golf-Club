@@ -11,6 +11,7 @@ import { NewToDiscGolfPage } from "./pages/NewToDiscGolfPage";
 import { JoinClubPage } from "./pages/JoinClubPage";
 import { CoursesPage } from "./pages/CoursesPage";
 import { ClubOpsPage } from "./pages/ClubOpsPage";
+import { LeagueCheckInPage } from "./pages/LeagueCheckInPage";
 import { LeadershipPage } from "./pages/LeadershipPage";
 import { AdminPage } from "./pages/AdminPage";
 import { INITIAL_COURSES, INITIAL_OFFICERS, INITIAL_EVENTS, INITIAL_ROUNDS } from "./data/seedData";
@@ -18,6 +19,9 @@ import { Event } from "./types";
 import { Check, Calendar, Users, GraduationCap, Sparkles, MapPin, UserCheck, ShieldAlert, Home, Wrench } from "lucide-react";
 
 function AppContent() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("leagueCheckIn")) return <LeagueCheckInPage />;
+
   const [activeTab, setActiveTab] = useState<string>("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
