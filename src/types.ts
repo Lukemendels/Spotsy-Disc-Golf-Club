@@ -5,9 +5,11 @@ export interface Event {
   title: string;
   category: CategoryType;
   courseId: string;
+  layout?: string;
   startDateTime: string; // ISO string for robust date parsing & display
   description: string;
   isOfficial: boolean;
+  isDemo?: boolean;
 }
 
 export interface Course {
@@ -19,6 +21,9 @@ export interface Course {
   beginnerFriendly: boolean;
   accessFees: string;
   directionsUrl: string;
+  sourceUrl?: string;
+  notes?: string;
+  holes?: number;
   image?: string;
 }
 
