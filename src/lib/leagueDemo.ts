@@ -11,7 +11,19 @@ export interface LeagueCheckIn {
 export const LEAGUE_CHECKIN_STORAGE_KEY = "spotsy-league-checkins-demo-v2";
 export const LEAGUE_CHECKIN_EVENT_KEY = "spotsy-league-checkins-updated";
 
-export const DEMO_DIVISIONS = ["Division A", "Division B", "Division C", "Division D"];
+// Weekly league uses the standard open amateur-to-pro ladders.
+export const DEMO_DIVISIONS = [
+  "MA4",
+  "MA3",
+  "MA2",
+  "MA1",
+  "MPO",
+  "FA4",
+  "FA3",
+  "FA2",
+  "FA1",
+  "FPO",
+];
 
 export function normalizePlayerName(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
@@ -44,7 +56,7 @@ export function upsertLeagueCheckIn(checkIn: LeagueCheckIn): LeagueCheckIn[] {
   return next;
 }
 
-export function buildDemoCheckIns(count = 28): LeagueCheckIn[] {
+export function buildDemoCheckIns(count = 27): LeagueCheckIn[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `demo-checkin-${index + 1}`,
     name: `Player ${String(index + 1).padStart(2, "0")}`,
