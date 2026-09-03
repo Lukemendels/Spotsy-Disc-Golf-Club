@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import {
   buildDemoCheckIns,
+  DEMO_CHECKIN_COUNT,
   DEMO_DIVISIONS,
   LEAGUE_CHECKIN_EVENT_KEY,
   LeagueCheckIn,
@@ -339,7 +340,7 @@ export const LeagueOperationsDemo: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
-        <div className="flex items-start gap-2"><Info className="mt-0.5 h-4 w-4 shrink-0" /><div><p className="font-bold">Concept demo with the intended league-night workflow.</p><p className="mt-1 leading-relaxed">QR check-in is implemented as a player-facing screen. This GitHub Pages demo stores the roster locally; production needs a secured shared store so player-phone scans synchronize to the organizer device.</p></div></div>
+        <div className="flex items-start gap-2"><Info className="mt-0.5 h-4 w-4 shrink-0" /><div><p className="font-bold">Concept demo with the intended league-night workflow.</p><p className="mt-1 leading-relaxed">QR check-in is implemented as a player-facing screen. This GitHub Pages demo stores the roster locally; production needs a secured shared store so player-phone scans synchronize to the organizer device.</p><p className="mt-1 leading-relaxed"><strong>Demo data:</strong> player names, divisions and UDisc results come from the Aug. 27, 2026 league round. Incoming bag-tag numbers and ace-pot entries are illustrative values because UDisc does not contain them.</p></div></div>
       </div>
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 card-shadow">
@@ -357,7 +358,7 @@ export const LeagueOperationsDemo: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button onClick={loadDemoRoster} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">Load 27 demo check-ins</button>
+          <button onClick={loadDemoRoster} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">Load Aug 27 roster · {DEMO_CHECKIN_COUNT}</button>
           <button onClick={clearRoster} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"><RotateCcw className="mr-1 inline h-3.5 w-3.5" />Clear</button>
           <button onClick={() => { setCheckInClosed((value) => !value); setCards([]); setPublished(false); }} className={`ml-auto rounded-lg px-3 py-2 text-xs font-bold ${checkInClosed ? "bg-green-100 text-green-800" : "bg-slate-900 text-white"}`}><Lock className="mr-1 inline h-3.5 w-3.5" />{checkInClosed ? "Reopen check-in" : "Close check-in · 5:45"}</button>
         </div>
