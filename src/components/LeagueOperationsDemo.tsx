@@ -249,6 +249,10 @@ function assignTagPool(results: ImportedTagResult[], input: "spotsyTag" | "staff
   return results.map((result) => ({ ...result, [output]: assigned.get(result.playerId) }));
 }
 
+function scoreLabel(score: number): string {
+  return score > 0 ? `+${score}` : String(score);
+}
+
 export const LeagueOperationsDemo: React.FC = () => {
   const [players, setPlayers] = useState<LeagueCheckIn[]>(() => loadLeagueCheckIns());
   const [checkInClosed, setCheckInClosed] = useState(false);
@@ -261,6 +265,7 @@ export const LeagueOperationsDemo: React.FC = () => {
   const [csvScoreSource, setCsvScoreSource] = useState("");
   const [csvError, setCsvError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [tagCopied, setTagCopied] = useState(false);
 
   useEffect(() => {
     const refresh = () => setPlayers(loadLeagueCheckIns());
@@ -314,20 +319,53 @@ export const LeagueOperationsDemo: React.FC = () => {
     try { await navigator.clipboard.writeText(`6:00 PM SHOTGUN CALL-OUT\n${calloutText}`); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { setCopied(false); }
   };
 
+  const copyTagCallout = async () => {
+    const spotsy = tagResults
+      .filter((result) => Number.isFinite(result.spotsyOut))
+      .sort((a, b) => (a.spotsyOut as number) - (b.spotsyOut as number))
+      .map((result) => `#${result.spotsyOut} — ${result.name}`)
+      .join("\n");
+    const stafford = tagResults
+      .filter((result) => Number.isFinite(result.staffordOut))
+      .sort((a, b) => (a.staffordOut as number) - (b.staffordOut as number))
+      .map((result) => `#${result.staffordOut} — ${result.name}`)
+      .join("\n");
+    const sections = [
+      spotsy ? `SPOTSY TAGS\n${spotsy}` : "",
+      stafford ? `STAFFORD TAGS\n${stafford}` : "",
+    ].filter(Boolean).join("\n\n");
+    try {
+      await navigator.clipboard.writeText(`BAG TAG CALL-OUT\n${sections}`);
+      setTagCopied(true);
+      setTimeout(() => setTagCopied(false), 1500);
+    } catch {
+      setTagCopied(false);
+    }
+  };
+
   const loadCsvText = (text: string, fileName: string) => {
     const imported = importUDiscCsv(text, players);
     setCsvError(imported.error ?? "");
     setCsvFileName(imported.error ? "" : fileName);
     setCsvScoreSource(imported.scoreSource ?? "");
-    setTagResults(imported.results);
+    if (imported.error) {
+      setTagResults([]);
+      return;
+    }
+
+    const spotsyDupes = duplicateValues(imported.results.map((result) => result.spotsyTag));
+    const staffordDupes = duplicateValues(imported.results.map((result) => result.staffordTag));
+    if (spotsyDupes.length || staffordDupes.length) {
+      setTagResults(imported.results);
+      return;
+    }
+
+    setTagResults(assignTagPool(assignTagPool(imported.results, "spotsyTag", "spotsyOut"), "staffordTag", "staffordOut"));
   };
+
   const handleCsvUpload = async (file?: File) => {
     if (!file) return;
     try { loadCsvText(await file.text(), file.name); } catch { setCsvError("The selected CSV could not be read."); setTagResults([]); }
-  };
-  const calculateTags = () => {
-    if (spotsyDuplicates.length || staffordDuplicates.length) return;
-    setTagResults(assignTagPool(assignTagPool(tagResults, "spotsyTag", "spotsyOut"), "staffordTag", "staffordOut"));
   };
 
   const hasOversizeException = targetCardSize === 3 && cards.some((card) => card.players.length > 3);
@@ -336,6 +374,7 @@ export const LeagueOperationsDemo: React.FC = () => {
   const eligibleAces = aces.filter((result) => result.acePotPaid);
   const unpaidAces = aces.filter((result) => !result.acePotPaid);
   const aceShare = eligibleAces.length ? 100 / eligibleAces.length : 0;
+  const tagsAssigned = tagResults.some((result) => Number.isFinite(result.spotsyOut) || Number.isFinite(result.staffordOut));
 
   return (
     <div className="space-y-6">
@@ -389,12 +428,13 @@ export const LeagueOperationsDemo: React.FC = () => {
       </section>
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 card-shadow">
-        <div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-700"><Tags className="h-4 w-4" />After round · UDisc → tags + ace pot</div><h2 className="mt-1 text-lg font-extrabold text-slate-900">Post-Round Settlement</h2><p className="mt-1 max-w-2xl text-xs text-slate-600">UDisc remains the score system of record. The import reassigns Spotsy and Stafford tags independently and checks every hole score for aces. Ace-pot eligibility comes from check-in. The built-in sample is the Aug. 27, 2026 league export.</p></div>
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-center"><label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-teal-200 bg-teal-50 px-4 py-4 text-teal-900"><FileUp className="h-6 w-6" /><span><span className="block text-sm font-extrabold">Import UDisc CSV</span><span className="block text-[11px] text-teal-800">Name + score + hole-by-hole results. No score re-entry.</span></span><input type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => handleCsvUpload(event.target.files?.[0])} /></label><button onClick={() => loadCsvText(DEMO_UDISC_CSV, "spotsy-summer-league-2026-2026-08-27.csv")} className="rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-bold text-white">Load Aug 27 UDisc sample</button></div>
+        <div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-700"><Tags className="h-4 w-4" />After round · UDisc → tags + ace pot</div><h2 className="mt-1 text-lg font-extrabold text-slate-900">Post-Round Settlement</h2><p className="mt-1 max-w-2xl text-xs text-slate-600">UDisc remains the score system of record. Upload the completed CSV once: the app immediately reassigns Spotsy and Stafford tags, checks every hole for aces, and builds the bag-tag call-out. Ace-pot eligibility comes from check-in. The built-in sample is the Aug. 27, 2026 league export.</p></div>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-center"><label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-teal-200 bg-teal-50 px-4 py-4 text-teal-900"><FileUp className="h-6 w-6" /><span><span className="block text-sm font-extrabold">Import UDisc CSV</span><span className="block text-[11px] text-teal-800">Upload once — scores, aces and bag tags settle automatically.</span></span><input type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => handleCsvUpload(event.target.files?.[0])} /></label><button onClick={() => loadCsvText(DEMO_UDISC_CSV, "spotsy-summer-league-2026-2026-08-27.csv")} className="rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-bold text-white">Load Aug 27 UDisc sample</button></div>
         {csvError && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">{csvError}</div>}
-        {(spotsyDuplicates.length > 0 || staffordDuplicates.length > 0) && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">Duplicate tag numbers detected: {spotsyDuplicates.length ? `Spotsy ${spotsyDuplicates.map((tag) => `#${tag}`).join(", ")}` : ""}{spotsyDuplicates.length && staffordDuplicates.length ? " · " : ""}{staffordDuplicates.length ? `Stafford ${staffordDuplicates.map((tag) => `#${tag}`).join(", ")}` : ""}.</div>}
+        {(spotsyDuplicates.length > 0 || staffordDuplicates.length > 0) && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">Duplicate tag numbers detected: {spotsyDuplicates.length ? `Spotsy ${spotsyDuplicates.map((tag) => `#${tag}`).join(", ")}` : ""}{spotsyDuplicates.length && staffordDuplicates.length ? " · " : ""}{staffordDuplicates.length ? `Stafford ${staffordDuplicates.map((tag) => `#${tag}`).join(", ")}` : ""}. Fix the check-in roster and import the CSV again.</div>}
         {tagResults.length > 0 && <AcePotSettlement eligibleAces={eligibleAces} unpaidAces={unpaidAces} aceShare={aceShare} paidCount={acePotCount} />}
-        {tagResults.length > 0 ? <TagResults results={tagResults} fileName={csvFileName} scoreSource={csvScoreSource} calculateTags={calculateTags} disabled={spotsyDuplicates.length > 0 || staffordDuplicates.length > 0} /> : <div className="rounded-xl border border-dashed border-slate-300 p-7 text-center text-xs text-slate-500">Import the completed UDisc CSV after the round. The check-in roster supplies the tags and ace-pot eligibility.</div>}
+        {tagsAssigned && <BagTagCallout results={tagResults} copied={tagCopied} copyCallout={copyTagCallout} />}
+        {tagResults.length > 0 ? <TagResults results={tagResults} fileName={csvFileName} scoreSource={csvScoreSource} /> : <div className="rounded-xl border border-dashed border-slate-300 p-7 text-center text-xs text-slate-500">Import the completed UDisc CSV after the round. The check-in roster supplies the tags and ace-pot eligibility.</div>}
       </section>
     </div>
   );
@@ -410,4 +450,48 @@ const Callout: React.FC<{ cards: DemoCard[]; copied: boolean; copyCallout: () =>
 
 const AcePotSettlement: React.FC<{ eligibleAces: ImportedTagResult[]; unpaidAces: ImportedTagResult[]; aceShare: number; paidCount: number }> = ({ eligibleAces, unpaidAces, aceShare, paidCount }) => <div className="rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="flex items-start gap-2"><Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" /><div className="min-w-0 flex-1"><p className="text-xs font-extrabold uppercase tracking-wider text-amber-900">Ace Pot Check</p><p className="mt-1 text-[11px] text-amber-800">{paidCount} players entered the ace pot at check-in.</p>{eligibleAces.length > 0 ? <div className="mt-3"><p className="text-sm font-extrabold text-amber-950">{eligibleAces.length} eligible ace{eligibleAces.length === 1 ? "" : "s"} → {aceShare.toFixed(eligibleAces.length === 3 ? 2 : 1)}% of the pot each</p><ul className="mt-2 space-y-1 text-xs text-amber-900">{eligibleAces.map((result) => <li key={result.playerId}><strong>{result.name}</strong> — {result.aceHoles.join(", ")}</li>)}</ul></div> : <p className="mt-2 text-sm font-bold text-amber-900">No eligible ace detected. Pot carries forward.</p>}{unpaidAces.length > 0 && <div className="mt-3 rounded-lg bg-white/70 p-2 text-[11px] text-amber-900"><strong>Ace detected, not pot-eligible:</strong> {unpaidAces.map((result) => `${result.name} (${result.aceHoles.join(", ")})`).join(" · ")}</div>}</div></div></div>;
 
-const TagResults: React.FC<{ results: ImportedTagResult[]; fileName: string; scoreSource: string; calculateTags: () => void; disabled: boolean }> = ({ results, fileName, scoreSource, calculateTags, disabled }) => <div className="space-y-3"><div className="grid grid-cols-2 gap-3 sm:grid-cols-4"><Metric value={fileName} label="File" /><Metric value={results.length} label="Players" /><Metric value={scoreSource} label="Score field" /><Metric value="2 pools" label="Spotsy + Stafford" /></div><div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[860px] text-left text-xs"><thead className="bg-slate-50 text-[10px] font-bold uppercase text-slate-500"><tr><th className="px-3 py-2">Finish</th><th className="px-3 py-2">Player</th><th className="px-3 py-2">Score</th><th className="px-3 py-2">Ace</th><th className="px-3 py-2">Spotsy in</th><th className="px-3 py-2">Spotsy out</th><th className="px-3 py-2">Stafford in</th><th className="px-3 py-2">Stafford out</th></tr></thead><tbody>{results.map((result, index) => <tr key={result.playerId} className="border-t border-slate-100"><td className="px-3 py-2 font-extrabold text-slate-500">{index + 1}</td><td className="px-3 py-2 font-bold">{result.name}</td><td className="px-3 py-2">{result.score}</td><td className="px-3 py-2 font-bold text-amber-700">{result.aceHoles.length ? `${result.aceHoles.join(", ")}${result.acePotPaid ? " ✓" : " (not entered)"}` : "—"}</td><td className="px-3 py-2">{result.spotsyTag ?? "—"}</td><td className="px-3 py-2 font-extrabold text-green-700">{result.spotsyOut ?? "—"}</td><td className="px-3 py-2">{result.staffordTag ?? "—"}</td><td className="px-3 py-2 font-extrabold text-blue-700">{result.staffordOut ?? "—"}</td></tr>)}</tbody></table></div><div className="flex flex-col gap-2 rounded-xl border border-teal-200 bg-teal-50 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-bold text-teal-900">Demo tag rule pending club confirmation</p><p className="text-[11px] text-teal-800">For each league separately, lowest score receives the lowest submitted tag; ties currently break by incoming tag.</p></div><button disabled={disabled} onClick={calculateTags} className="rounded-lg bg-teal-700 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"><Trophy className="mr-1 inline h-3.5 w-3.5" />Assign both tag pools</button></div></div>;
+const BagTagCallout: React.FC<{ results: ImportedTagResult[]; copied: boolean; copyCallout: () => void }> = ({ results, copied, copyCallout }) => {
+  const spotsy = results
+    .filter((result) => Number.isFinite(result.spotsyOut))
+    .sort((a, b) => (a.spotsyOut as number) - (b.spotsyOut as number));
+  const stafford = results
+    .filter((result) => Number.isFinite(result.staffordOut))
+    .sort((a, b) => (a.staffordOut as number) - (b.staffordOut as number));
+
+  return (
+    <div className="rounded-2xl border-2 border-green-300 bg-green-50 p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-green-800"><Trophy className="h-4 w-4" />Bag Tag Call-Out</div>
+          <p className="mt-1 text-sm font-extrabold text-green-950">Tags are assigned. Read straight down the screen while handing them out.</p>
+          <p className="mt-1 text-[11px] text-green-800">Lower tag number first. Incoming tag is shown underneath for a quick handoff check.</p>
+        </div>
+        <button onClick={copyCallout} className="w-full rounded-lg bg-white px-3 py-2.5 text-xs font-bold text-green-800 ring-1 ring-green-300 sm:w-auto"><ClipboardCopy className="mr-1 inline h-3.5 w-3.5" />{copied ? "Copied" : "Copy tag call-out"}</button>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        {spotsy.length > 0 && <div className="rounded-xl border border-green-200 bg-white/70 p-3">
+          <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-extrabold text-green-950">Spotsy Tags</h3><span className="rounded-full bg-green-100 px-2 py-1 text-[10px] font-bold text-green-800">{spotsy.length} tags</span></div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            {spotsy.map((result) => <div key={`spotsy-${result.playerId}`} className="flex min-h-16 items-center gap-3 rounded-xl border border-green-100 bg-white p-3 shadow-sm">
+              <div className="flex h-12 min-w-12 items-center justify-center rounded-full bg-green-700 text-lg font-black text-white">#{result.spotsyOut}</div>
+              <div className="min-w-0"><p className="truncate text-sm font-extrabold text-slate-950">{result.name}</p><p className="text-[11px] font-semibold text-slate-500">{scoreLabel(result.score)} · brought #{result.spotsyTag}</p></div>
+            </div>)}
+          </div>
+        </div>}
+
+        {stafford.length > 0 && <div className="rounded-xl border border-blue-200 bg-white/70 p-3">
+          <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-extrabold text-blue-950">Stafford Tags</h3><span className="rounded-full bg-blue-100 px-2 py-1 text-[10px] font-bold text-blue-800">{stafford.length} tags</span></div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            {stafford.map((result) => <div key={`stafford-${result.playerId}`} className="flex min-h-16 items-center gap-3 rounded-xl border border-blue-100 bg-white p-3 shadow-sm">
+              <div className="flex h-12 min-w-12 items-center justify-center rounded-full bg-blue-700 text-lg font-black text-white">#{result.staffordOut}</div>
+              <div className="min-w-0"><p className="truncate text-sm font-extrabold text-slate-950">{result.name}</p><p className="text-[11px] font-semibold text-slate-500">{scoreLabel(result.score)} · brought #{result.staffordTag}</p></div>
+            </div>)}
+          </div>
+        </div>}
+      </div>
+    </div>
+  );
+};
+
+const TagResults: React.FC<{ results: ImportedTagResult[]; fileName: string; scoreSource: string }> = ({ results, fileName, scoreSource }) => <div className="space-y-3"><div className="grid grid-cols-2 gap-3 sm:grid-cols-4"><Metric value={fileName} label="File" /><Metric value={results.length} label="Players" /><Metric value={scoreSource} label="Score field" /><Metric value="Automatic" label="Tag assignment" /></div><div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[860px] text-left text-xs"><thead className="bg-slate-50 text-[10px] font-bold uppercase text-slate-500"><tr><th className="px-3 py-2">Finish</th><th className="px-3 py-2">Player</th><th className="px-3 py-2">Score</th><th className="px-3 py-2">Ace</th><th className="px-3 py-2">Spotsy in</th><th className="px-3 py-2">Spotsy out</th><th className="px-3 py-2">Stafford in</th><th className="px-3 py-2">Stafford out</th></tr></thead><tbody>{results.map((result, index) => <tr key={result.playerId} className="border-t border-slate-100"><td className="px-3 py-2 font-extrabold text-slate-500">{index + 1}</td><td className="px-3 py-2 font-bold">{result.name}</td><td className="px-3 py-2">{result.score}</td><td className="px-3 py-2 font-bold text-amber-700">{result.aceHoles.length ? `${result.aceHoles.join(", ")}${result.acePotPaid ? " ✓" : " (not entered)"}` : "—"}</td><td className="px-3 py-2">{result.spotsyTag ?? "—"}</td><td className="px-3 py-2 font-extrabold text-green-700">{result.spotsyOut ?? "—"}</td><td className="px-3 py-2">{result.staffordTag ?? "—"}</td><td className="px-3 py-2 font-extrabold text-blue-700">{result.staffordOut ?? "—"}</td></tr>)}</tbody></table></div><div className="rounded-xl border border-teal-200 bg-teal-50 p-4"><p className="text-xs font-bold text-teal-900">Bag tags assigned automatically on import</p><p className="mt-1 text-[11px] text-teal-800">For each league separately, lowest score receives the lowest submitted tag; ties currently break by incoming tag. No second settlement action is required.</p></div></div>;
