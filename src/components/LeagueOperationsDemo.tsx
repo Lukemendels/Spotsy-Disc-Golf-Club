@@ -47,15 +47,38 @@ interface ImportedTagResult {
 const DIVISION_ORDER = new Map(DEMO_DIVISIONS.map((division, index) => [division, index]));
 const HOLES = Array.from({ length: 18 }, (_, index) => index + 1);
 
-const DEMO_UDISC_CSV = `PlayerName,CourseName,LayoutName,Date,Total,+/-,Hole1,Hole2,Hole3
-Player 04,Loriella Park,White to Red,2026-08-27 1800,48,-6,1,3,2
-Player 11,Loriella Park,White to Red,2026-08-27 1800,50,-4,3,1,2
-Player 02,Loriella Park,White to Red,2026-08-27 1800,53,-1,3,3,3
-Player 19,Loriella Park,White to Red,2026-08-27 1800,54,0,3,3,3
-Player 07,Loriella Park,White to Red,2026-08-27 1800,55,1,3,4,3
-Player 23,Loriella Park,White to Red,2026-08-27 1800,57,3,4,3,3
-Player 14,Loriella Park,White to Red,2026-08-27 1800,58,4,4,4,3
-Player 27,Loriella Park,White to Red,2026-08-27 1800,60,6,4,4,4`;
+const DEMO_UDISC_CSV = `division,position,position_raw,name,event_relative_score,event_total_score,pdga_number,username,round_relative_score,round_total_score,round_rating,paid,checked_in,starting_hole,start_time,hole_1,hole_2,hole_3,hole_4,hole_5,hole_6,hole_7,hole_8,hole_9,hole_10,hole_11,hole_12,hole_13,hole_14,hole_15,hole_16,hole_17,hole_18
+MPO,1,1,Emmanuele Lizama,-12,46,133726,emmanuele,-12,46,265,No,Yes,6,"Aug 27, 2026, 6:00 PM",2,2,3,1,2,4,4,2,3,2,2,2,2,3,3,4,3,2
+MPO,2,2,Mark Gibson,-11,47,122326,gibsonmark,-11,47,258,No,Yes,1,"Aug 27, 2026, 5:58 PM",2,3,2,3,2,3,4,3,2,2,3,3,2,3,3,3,2,2
+MPO,3,3,Brandon Kilby,-8,50,31334,kilby540,-8,50,238,No,Yes,18,"Aug 27, 2026, 6:01 PM",3,3,3,2,4,3,3,2,3,2,2,2,3,3,3,4,2,3
+MPO,4,4,Gerald Mudd,-7,51,14741,grumpa420,-7,51,231,No,Yes,6,"Aug 27, 2026, 6:00 PM",2,2,4,2,2,5,4,3,2,3,4,3,3,3,2,3,2,2
+MPO,T5,5,Bob Cannon,-3,55,26532,dgolfnbob,-3,55,206,No,Yes,1,"Aug 27, 2026, 5:58 PM",4,3,3,2,2,3,4,3,3,2,4,3,3,4,4,4,2,2
+MPO,T5,5,Ben Vaca,-3,55,193609,meenbean,-3,55,206,No,Yes,1,"Aug 27, 2026, 5:58 PM",2,2,4,2,3,5,4,3,3,2,2,2,4,4,3,4,3,3
+MA1,1,1,Kylie Stark,-6,52,,kstark24,-6,52,225,No,Yes,11,"Aug 27, 2026, 5:59 PM",3,3,2,2,3,4,4,3,2,2,2,3,3,4,2,3,3,4
+MA1,2,2,Chris Kowalski,-3,55,20634,kowalvandal,-3,55,206,No,Yes,8,"Aug 27, 2026, 6:00 PM",3,3,3,2,2,5,4,3,3,2,2,3,3,4,2,4,3,4
+MA1,3,3,Justin Laughlin,0,58,19095,frolfgrass,0,58,189,No,Yes,15,"Aug 27, 2026, 6:02 PM",3,4,3,3,3,4,5,2,3,3,3,4,3,4,3,3,3,2
+MA2,1,1,John wallingford,-4,54,,kosmicvanquish,-4,54,212,No,Yes,9,"Aug 27, 2026, 6:00 PM",3,3,3,3,3,4,4,2,3,2,3,5,3,3,2,3,3,2
+MA2,2,2,Jeff Perkins,-2,56,236235,jeffperkins,-2,56,200,No,Yes,18,"Aug 27, 2026, 6:01 PM",3,4,3,3,2,3,4,3,3,3,4,3,2,5,3,3,3,2
+MA2,T3,3,Abby kowalski,0,58,118814,abbykowal,0,58,189,No,Yes,8,"Aug 27, 2026, 6:00 PM",3,3,4,2,4,4,4,2,3,4,2,5,3,3,3,4,3,2
+MA2,T3,3,Corey Wiseman,0,58,127115,cwiseman1989,0,58,189,No,Yes,18,"Aug 27, 2026, 6:01 PM",2,3,3,3,3,3,4,3,2,2,3,4,4,5,2,5,3,4
+MA2,T3,3,Allan Stephens,0,58,129942,dewerson,0,58,189,No,Yes,18,"Aug 27, 2026, 6:01 PM",3,2,3,3,4,3,4,2,3,3,3,3,3,5,3,4,3,4
+MA2,6,6,Tanner Rains,3,61,300835,tmon3yaot,3,61,172,No,Yes,17,"Aug 27, 2026, 6:01 PM",4,3,4,2,6,8,3,3,3,2,2,3,3,3,3,3,2,4
+MA2,7,7,Giovanni Lizama,4,62,133724,giovannilizama,4,62,167,No,Yes,6,"Aug 27, 2026, 6:00 PM",3,3,3,3,4,5,5,3,2,3,4,3,3,4,3,5,4,2
+MA3,1,1,Cody Beard,1,59,296651,bearclaw27,1,59,183,No,Yes,10,"Aug 27, 2026, 5:58 PM",3,3,3,2,3,5,4,5,3,2,3,3,3,4,2,5,3,3
+MA3,2,2,Luke Mendelsohn,2,60,320056,lukemendelsohn,2,60,178,No,Yes,12,"Aug 27, 2026, 5:56 PM",3,3,3,3,3,5,5,3,3,3,3,3,3,4,3,4,3,3
+MA3,3,3,David Chatelain,3,61,314889,dmjdav,3,61,172,No,Yes,12,"Aug 27, 2026, 5:56 PM",3,3,4,3,4,6,4,4,3,3,2,3,3,4,2,4,2,4
+MA3,4,4,Julian Shapiro,6,64,333751,bottlzz,6,64,157,No,Yes,9,"Aug 27, 2026, 6:00 PM",5,3,4,3,3,4,5,3,3,3,3,4,3,5,2,5,3,3
+MA3,5,5,Munseok Kim,7,65,,munseokkim98,7,65,152,No,Yes,9,"Aug 27, 2026, 6:00 PM",3,4,3,2,3,4,5,2,3,3,2,5,3,6,4,6,4,3
+MA3,T6,6,James Gibson,13,71,211213,jamesgibson128,13,71,124,No,Yes,17,"Aug 27, 2026, 6:01 PM",4,2,4,3,3,9,6,4,3,4,4,6,3,3,3,5,2,3
+MA3,T6,6,William Alex Gibson,13,71,,wagibson,13,71,124,No,Yes,11,"Aug 27, 2026, 5:59 PM",3,4,3,2,3,6,5,5,3,3,3,4,4,5,4,8,3,3
+MA3,8,8,Nathon Coe ,17,75,318150,nath0n,17,75,108,No,Yes,12,"Aug 27, 2026, 5:56 PM",4,4,4,4,3,5,5,4,5,4,2,4,3,7,4,5,5,3
+MA4,1,1,Gerald Williams,7,65,247076,gwwilliams,7,65,152,No,Yes,10,"Aug 27, 2026, 5:58 PM",3,3,3,3,3,6,5,4,2,3,4,4,4,4,3,4,4,3
+MA4,2,2,Cade Beard,8,66,296687,berryboys,8,66,147,No,Yes,10,"Aug 27, 2026, 5:58 PM",3,3,3,3,4,6,5,3,4,4,3,4,3,4,3,4,5,2
+MA4,3,3,David Kerns,10,68,,tech13005,10,68,137,No,Yes,8,"Aug 27, 2026, 6:00 PM",3,3,3,3,3,6,5,4,3,4,3,5,4,5,3,4,4,3
+MA4,4,4,Zachary Knerr,13,71,274949,zak616,13,71,124,No,Yes,17,"Aug 27, 2026, 6:01 PM",5,5,3,3,4,5,5,4,3,4,3,4,5,3,4,5,3,3
+MA4,5,5,Corey Axelson,14,72,,axelsonc1950,14,72,120,No,Yes,15,"Aug 27, 2026, 6:02 PM",4,3,3,3,4,6,5,4,3,3,4,4,4,4,3,6,3,6
+MA4,6,6,Melissa Gibson,16,74,239388,gibsonmel,16,74,112,No,Yes,11,"Aug 27, 2026, 5:59 PM",4,5,4,3,4,6,4,4,4,3,3,3,3,6,4,7,3,4
+MA4,7,7,Bobby Zinn,39,97,,bobbyzinn,39,97,47,No,Yes,15,"Aug 27, 2026, 6:02 PM",4,5,4,4,2,7,8,6,6,6,6,7,7,7,4,5,4,5`;
 
 function fastThreeCardSizes(total: number): number[] {
   if (total <= 0) return [];
@@ -157,8 +180,28 @@ function importUDiscCsv(text: string, checkIns: LeagueCheckIn[]): { results: Imp
   if (rows.length < 2) return { results: [], error: "The CSV does not contain a header row and player results." };
   const headers = rows[0];
   const nameIndex = findHeaderIndex(headers, ["PlayerName", "name", "player name", "player"]);
-  const relativeIndex = findHeaderIndex(headers, ["+/-", "relative_score", "relative score", "relative score total", "relative score round"]);
-  const totalIndex = findHeaderIndex(headers, ["Total", "total_score", "total score", "total score total", "total score round"]);
+  const relativeIndex = findHeaderIndex(headers, [
+    "round_relative_score",
+    "round relative score",
+    "event_relative_score",
+    "event relative score",
+    "+/-",
+    "relative_score",
+    "relative score",
+    "relative score total",
+    "relative score round",
+  ]);
+  const totalIndex = findHeaderIndex(headers, [
+    "round_total_score",
+    "round total score",
+    "event_total_score",
+    "event total score",
+    "Total",
+    "total_score",
+    "total score",
+    "total score total",
+    "total score round",
+  ]);
   const holeIndexes = headers
     .map((header, index) => ({ header, index, normalized: normalizeHeader(header) }))
     .filter((item) => /^hole ?\d+$/.test(item.normalized));
@@ -345,8 +388,8 @@ export const LeagueOperationsDemo: React.FC = () => {
       </section>
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 card-shadow">
-        <div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-700"><Tags className="h-4 w-4" />After round · UDisc → tags + ace pot</div><h2 className="mt-1 text-lg font-extrabold text-slate-900">Post-Round Settlement</h2><p className="mt-1 max-w-2xl text-xs text-slate-600">UDisc remains the score system of record. The import reassigns Spotsy and Stafford tags independently and checks every hole score for aces. Ace-pot eligibility comes from check-in.</p></div>
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-center"><label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-teal-200 bg-teal-50 px-4 py-4 text-teal-900"><FileUp className="h-6 w-6" /><span><span className="block text-sm font-extrabold">Import UDisc CSV</span><span className="block text-[11px] text-teal-800">Name + score + hole-by-hole results. No score re-entry.</span></span><input type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => handleCsvUpload(event.target.files?.[0])} /></label><button onClick={() => loadCsvText(DEMO_UDISC_CSV, "udisc-demo-round.csv")} className="rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-bold text-white">Load demo UDisc CSV</button></div>
+        <div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-700"><Tags className="h-4 w-4" />After round · UDisc → tags + ace pot</div><h2 className="mt-1 text-lg font-extrabold text-slate-900">Post-Round Settlement</h2><p className="mt-1 max-w-2xl text-xs text-slate-600">UDisc remains the score system of record. The import reassigns Spotsy and Stafford tags independently and checks every hole score for aces. Ace-pot eligibility comes from check-in. The built-in sample is the Aug. 27, 2026 league export.</p></div>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-center"><label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-teal-200 bg-teal-50 px-4 py-4 text-teal-900"><FileUp className="h-6 w-6" /><span><span className="block text-sm font-extrabold">Import UDisc CSV</span><span className="block text-[11px] text-teal-800">Name + score + hole-by-hole results. No score re-entry.</span></span><input type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => handleCsvUpload(event.target.files?.[0])} /></label><button onClick={() => loadCsvText(DEMO_UDISC_CSV, "spotsy-summer-league-2026-2026-08-27.csv")} className="rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-bold text-white">Load Aug 27 UDisc sample</button></div>
         {csvError && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">{csvError}</div>}
         {(spotsyDuplicates.length > 0 || staffordDuplicates.length > 0) && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">Duplicate tag numbers detected: {spotsyDuplicates.length ? `Spotsy ${spotsyDuplicates.map((tag) => `#${tag}`).join(", ")}` : ""}{spotsyDuplicates.length && staffordDuplicates.length ? " · " : ""}{staffordDuplicates.length ? `Stafford ${staffordDuplicates.map((tag) => `#${tag}`).join(", ")}` : ""}.</div>}
         {tagResults.length > 0 && <AcePotSettlement eligibleAces={eligibleAces} unpaidAces={unpaidAces} aceShare={aceShare} paidCount={acePotCount} />}
