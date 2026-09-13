@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   LogOut,
   Wrench,
+  MessagesSquare,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -27,6 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
     { id: "home", label: "Dashboard", icon: Home },
     { id: "events", label: "Events", icon: Calendar },
     { id: "rounds", label: "Casual Rounds", icon: Users },
+    { id: "community", label: "Community Feed", icon: MessagesSquare },
     { id: "clubOps", label: "Club Ops", icon: Wrench },
     { id: "beginner", label: "New Players", icon: GraduationCap },
     { id: "join", label: "Join the Club", icon: Sparkles },
