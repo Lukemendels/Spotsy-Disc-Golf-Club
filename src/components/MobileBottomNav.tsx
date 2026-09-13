@@ -1,6 +1,6 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
-import { Home, Calendar, Users, GraduationCap, Sparkles, ShieldAlert, Wrench } from "lucide-react";
+import { Home, Calendar, Users, GraduationCap, Sparkles, ShieldAlert, Wrench, MessagesSquare } from "lucide-react";
 
 interface MobileBottomNavProps {
   activeTab: string;
@@ -14,6 +14,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, set
   const tabs = [
     { id: "home", label: "Home", icon: Home },
     { id: "events", label: "Events", icon: Calendar },
+    { id: "community", label: "Feed", icon: MessagesSquare },
     { id: "clubOps", label: "Club Ops", icon: Wrench },
     { id: "rounds", label: "Rounds", icon: Users },
     { id: "beginner", label: "New", icon: GraduationCap },
