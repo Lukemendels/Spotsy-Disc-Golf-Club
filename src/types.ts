@@ -84,3 +84,19 @@ export interface AnnouncementSubscription {
   email: string;
   createdAt: string;
 }
+
+export interface FacebookPost {
+  id: string;
+  url: string;
+  created_at: string;
+  text: string;
+  reactions: number;
+  comments: number;
+}
+
+export interface FacebookActivityFeed {
+  group: string;
+  group_url: string;
+  updated_at: string;
+  posts: FacebookPost[];
+}
