@@ -14,9 +14,10 @@ import { ClubOpsPage } from "./pages/ClubOpsPage";
 import { LeagueCheckInPage } from "./pages/LeagueCheckInPage";
 import { LeadershipPage } from "./pages/LeadershipPage";
 import { AdminPage } from "./pages/AdminPage";
+import { CommunityFeedPage } from "./pages/CommunityFeedPage";
 import { INITIAL_COURSES, INITIAL_OFFICERS, INITIAL_EVENTS, INITIAL_ROUNDS } from "./data/seedData";
 import { Event } from "./types";
-import { Check, Calendar, Users, GraduationCap, Sparkles, MapPin, UserCheck, ShieldAlert, Home, Wrench } from "lucide-react";
+import { Check, Calendar, Users, GraduationCap, Sparkles, MapPin, UserCheck, ShieldAlert, Home, Wrench, MessagesSquare } from "lucide-react";
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<string>("home");
@@ -37,6 +38,7 @@ function AppContent() {
     { id: "home", label: "Dashboard", icon: Home },
     { id: "events", label: "Events", icon: Calendar },
     { id: "rounds", label: "Casual Rounds", icon: Users },
+    { id: "community", label: "Community Feed", icon: MessagesSquare },
     { id: "clubOps", label: "Club Ops", icon: Wrench },
     { id: "beginner", label: "New Players", icon: GraduationCap },
     { id: "join", label: "Join Club", icon: Sparkles },
@@ -72,6 +74,7 @@ function AppContent() {
           {activeTab === "home" && <HomePage events={events} rounds={rounds} courses={courses} onNavigate={setActiveTab} onJoinRound={handleJoinRoundFromHome} />}
           {activeTab === "events" && <EventsPage events={events} courses={courses} onCreateEvent={handleCreateDemoEvent} />}
           {activeTab === "rounds" && <RoundsPage rounds={rounds} courses={courses} />}
+          {activeTab === "community" && <CommunityFeedPage />}
           {activeTab === "clubOps" && <ClubOpsPage courses={courses} events={events} onCreateEvent={handleCreateDemoEvent} />}
           {activeTab === "beginner" && <NewToDiscGolfPage courses={courses} />}
           {activeTab === "join" && <JoinClubPage />}
