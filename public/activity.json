@@ -1,16 +1,8 @@
 {
   "group": "Spotsy Disc Golf Club",
   "group_url": "https://facebook.com/groups/217219268338670/",
-  "updated_at": "2026-09-20T15:21:56.301249+00:00",
+  "updated_at": "2026-09-20T18:51:56.606917+00:00",
   "posts": [
-    {
-      "id": "28416804157953470",
-      "url": "https://facebook.com/groups/spotsydgclub/permalink/28416804157953470/",
-      "created_at": "2026-09-20T07:59:30.000-04:00",
-      "text": "Sunday random draw doubles are at Curtis Memorial Park 9/20/26... $5 entry and optional $1 ace/CTPs pot. Be registered by 10am.",
-      "reactions": 2,
-      "comments": 0
-    },
     {
       "id": "28410810058552880",
       "url": "https://facebook.com/groups/spotsydgclub/permalink/28410810058552880/",
@@ -161,6 +153,14 @@
       "created_at": "2026-09-08T18:30:25.000-04:00",
       "text": "These 2 discs were in the Curtis Park lost and found. No name/number. Let me know if they belong to you. All other discs with numbers have been claimed.",
       "reactions": 1,
+      "comments": 0
+    },
+    {
+      "id": "28258023710498183",
+      "url": "https://facebook.com/groups/spotsydgclub/permalink/28258023710498183/",
+      "created_at": "2026-09-08T18:29:34.000-04:00",
+      "text": "These 2 discs were in the Curtis Park lost and found. No name/number. Let me know if they belong to you. All other discs with numbers have been claimed.",
+      "reactions": 0,
       "comments": 0
     }
   ]
