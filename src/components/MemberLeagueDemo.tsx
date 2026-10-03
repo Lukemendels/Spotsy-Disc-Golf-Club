@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { DEMO_DIVISIONS, loadLeagueCheckIns } from '../lib/leagueDemo';
-import { approveClaim, checkIn, DEMO_EVENT_ID, loadMembers, MEMBER_EVENT, memberForIdentity, saveMembers, saveProfile } from '../lib/memberDemo';
+import { approveClaim, checkIn, checkInFormValues, DEMO_EVENT_ID, loadMembers, MEMBER_EVENT, memberForIdentity, saveMembers, saveProfile } from '../lib/memberDemo';
 
 export function MemberLeagueDemo({ staff = false }: { staff?: boolean }) {
   const { userProfile, signInDemoUser, signOut } = useAuth();
@@ -11,7 +11,17 @@ export function MemberLeagueDemo({ staff = false }: { staff?: boolean }) {
   const [selection, setSelection] = useState(''); const [notice, setNotice] = useState('');
   const member = userProfile ? memberForIdentity(state, userProfile.uid) : undefined;
   useEffect(() => { const refresh = () => setState(loadMembers()); window.addEventListener(MEMBER_EVENT, refresh); window.addEventListener('storage', refresh); return () => { window.removeEventListener(MEMBER_EVENT, refresh); window.removeEventListener('storage', refresh); }; }, []);
-  useEffect(() => { setName(member?.name || ''); setPdga(member?.pdga || ''); setUsername(state.mappings.filter(m => m.memberId === member?.id && m.active !== false).at(-1)?.username || ''); const a = state.attendance.find(a => a.memberId === member?.id && a.eventId === DEMO_EVENT_ID); setDivision(a?.division || "MA4"); setTag(a?.spotsyTag?.toString() || ""); setStafford(a?.staffordTag?.toString() || ""); setAce(a?.aceRequested || false); }, [member?.id]);
+  useEffect(() => { setName(member?.name || ''); setPdga(member?.pdga || ''); setUsername(state.mappings.filter(m => m.memberId === member?.id && m.active !== false).at(-1)?.username || ''); }, [member?.id]);
+  const selectedId = staff ? selection : member?.id;
+  const selectedAttendance = state.attendance.find(a => a.memberId === selectedId && a.eventId === DEMO_EVENT_ID);
+  useEffect(() => {
+    const values = checkInFormValues(state, selectedId);
+    setDivision(values.division); setTag(values.tag); setStafford(values.stafford); setAce(values.ace);
+  }, [selectedId, selectedAttendance?.division, selectedAttendance?.spotsyTag, selectedAttendance?.staffordTag, selectedAttendance?.aceRequested]);
+  function selectMember(id: string) {
+    const values = checkInFormValues(loadMembers(), id);
+    setSelection(id); setDivision(values.division); setTag(values.tag); setStafford(values.stafford); setAce(values.ace); setNotice('');
+  }
   function act(fn: () => void) { try { fn(); } catch (error) { setNotice((error as Error).message); } }
   function submit(memberId: string) {
     const parseTag = (s: string) => { if (!s) return undefined; if (!/^\d+$/.test(s) || Number(s) < 1) throw new Error('Tags must be positive whole numbers'); return Number(s); };
@@ -34,11 +44,11 @@ export function MemberLeagueDemo({ staff = false }: { staff?: boolean }) {
         <button className={buttonClass}>Save profile once</button>
       </form></details>
     </>}
-    {staff && <div className="space-y-3"><label className="block text-sm">Existing member (IDs distinguish identical names)<select value={selection} onChange={e => setSelection(e.target.value)} className={fieldClass}><option value="">Select member or add a guest</option>{state.members.map(m => <option key={m.id} value={m.id}>{m.name} • {m.id} {m.guest ? '(guest)' : ''}</option>)}</select></label>
-      <form className="grid gap-3 sm:grid-cols-3" onSubmit={e => { e.preventDefault(); act(() => { if (!name.trim()) throw new Error('Enter guest name'); if (pdga && !/^\d+$/.test(pdga)) throw new Error('PDGA number must contain digits'); if (username.trim() && loadMembers().mappings.some(m => m.username === username.trim())) throw new Error('Username already mapped; select that member or request review'); const id = crypto.randomUUID(); saveMembers({ ...loadMembers(), members: [...loadMembers().members, { id, name: name.trim(), pdga: pdga || undefined, guest: true, profileComplete: false }], mappings: [...loadMembers().mappings, ...(username.trim() ? [{ username: username.trim(), memberId: id, reviewedAt: 'staff-assisted demo entry' }] : [])] }); setSelection(id); setNotice('Guest created. No app or account required; check them in below.'); }); }}>
+    {staff && <div className="space-y-3"><label className="block text-sm">Existing member (IDs distinguish identical names)<select value={selection} onChange={e => selectMember(e.target.value)} className={fieldClass}><option value="">Select member or add a guest</option>{state.members.map(m => <option key={m.id} value={m.id}>{m.name} • {m.id} {m.guest ? '(guest)' : ''}</option>)}</select></label>
+      <form className="grid gap-3 sm:grid-cols-3" onSubmit={e => { e.preventDefault(); act(() => { if (!name.trim()) throw new Error('Enter guest name'); if (pdga && !/^\d+$/.test(pdga)) throw new Error('PDGA number must contain digits'); if (username.trim() && loadMembers().mappings.some(m => m.username === username.trim())) throw new Error('Username already mapped; select that member or request review'); const id = crypto.randomUUID(); saveMembers({ ...loadMembers(), members: [...loadMembers().members, { id, name: name.trim(), pdga: pdga || undefined, guest: true, profileComplete: false }], mappings: [...loadMembers().mappings, ...(username.trim() ? [{ username: username.trim(), memberId: id, reviewedAt: 'staff-assisted demo entry' }] : [])] }); selectMember(id); setName(''); setUsername(''); setPdga(''); setNotice('Guest created. No app or account required; check them in below.'); }); }}>
       <label className="text-sm">Guest name<input required value={name} onChange={e => setName(e.target.value)} className={fieldClass} /></label><label className="text-sm">UDisc username (optional)<input value={username} onChange={e => setUsername(e.target.value)} className={fieldClass} /></label><label className="text-sm">PDGA (optional)<input value={pdga} onChange={e => setPdga(e.target.value)} className={fieldClass} /></label><button className={buttonClass}>Create guest record</button></form></div>}
     {(staff || member?.profileComplete) && <form className="grid gap-3 sm:grid-cols-3" onSubmit={e => { e.preventDefault(); act(() => submit(staff ? selection : member!.id)); }}>
-      <label className="text-sm">Division<select value={division} onChange={e => setDivision(e.target.value)} className={fieldClass}>{DEMO_DIVISIONS.map(d => <option key={d}>{d}</option>)}</select></label>
+      <label className="text-sm">Division<select aria-label="Division" value={division} onChange={e => setDivision(e.target.value)} className={fieldClass}>{DEMO_DIVISIONS.map(d => <option key={d}>{d}</option>)}</select></label>
       <label className="text-sm">Spotsy tag (optional)<input inputMode="numeric" value={tag} onChange={e => setTag(e.target.value)} className={fieldClass} /></label><label className="text-sm">Stafford tag (optional)<input inputMode="numeric" value={stafford} onChange={e => setStafford(e.target.value)} className={fieldClass} /></label>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={ace} onChange={e => setAce(e.target.checked)} />Request ace-pot entry</label><button disabled={state.locked} className={buttonClass + ' disabled:opacity-40'}>{state.locked ? 'Check-in closed' : 'Check in for sample league'}</button>
     </form>}

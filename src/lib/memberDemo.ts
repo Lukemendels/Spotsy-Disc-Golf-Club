@@ -9,7 +9,7 @@ export interface Payment { attendanceId: string; aceConfirmed: boolean; confirme
 export interface Claim { id: string; authId: string; memberId: string; status: 'pending' | 'approved' | 'rejected' }
 export interface ResultRow { username: string; name: string; pdga: string; score: number; scoreSource: string; aceHoles: string[]; error?: string }
 export interface SavedResult extends ResultRow { eventId: string; memberId: string; importId: string }
-export interface DemoState { members: Member[]; identities: Identity[]; mappings: UDiscMapping[]; attendance: Attendance[]; payments: Payment[]; claims: Claim[]; results: SavedResult[]; imports: Array<{ id: string; eventId: string; filename: string; importedAt: string }>; locked: boolean }
+export interface DemoState { members: Member[]; identities: Identity[]; mappings: UDiscMapping[]; attendance: Attendance[]; payments: Payment[]; claims: Claim[]; results: SavedResult[]; imports: Array<{ id: string; eventId: string; filename: string; importedAt: string }>; locked: boolean; resultsReviewRequired?: boolean }
 export function initialState(): DemoState {
   return { members: [
     { id: 'sample-alex-a', name: 'Alex River', pdga: '900001', guest: false, profileComplete: true },
@@ -22,12 +22,21 @@ export function initialState(): DemoState {
 export function loadMembers(): DemoState { try { return JSON.parse(localStorage.getItem(MEMBER_STORAGE_KEY) || 'null') || initialState(); } catch { return initialState(); } }
 export function saveMembers(state: DemoState) { localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(state)); window.dispatchEvent(new CustomEvent(MEMBER_EVENT)); }
 export function memberForIdentity(state: DemoState, authId: string) { return state.members.find(m => m.id === state.identities.find(i => i.authId === authId)?.memberId); }
+export function checkInFormValues(state: DemoState, memberId?: string) {
+  const a = state.attendance.find(a => a.eventId === DEMO_EVENT_ID && a.memberId === memberId);
+  return { division: a?.division || 'MA4', tag: a?.spotsyTag?.toString() || '', stafford: a?.staffordTag?.toString() || '', ace: a?.aceRequested || false };
+}
+export function replaceAttendance(state: DemoState, attendance: Attendance[]): DemoState {
+  const members = (records: Attendance[]) => records.filter(a => a.eventId === DEMO_EVENT_ID).map(a => a.memberId).sort().join('|');
+  const changedField = members(state.attendance) !== members(attendance);
+  return { ...state, attendance, resultsReviewRequired: !!state.resultsReviewRequired || (changedField && state.results.some(r => r.eventId === DEMO_EVENT_ID)) };
+}
 export function checkIn(state: DemoState, memberId: string, fields: Omit<Attendance, 'id' | 'eventId' | 'memberId' | 'checkedInAt'>): DemoState {
   if (state.locked) throw new Error('Check-in is closed. Ask the organizer to reopen it.');
   if (!state.members.some(m => m.id === memberId)) throw new Error('Select a valid member');
   const existing = state.attendance.find(a => a.eventId === DEMO_EVENT_ID && a.memberId === memberId);
   const record = { ...fields, id: existing?.id || crypto.randomUUID(), eventId: DEMO_EVENT_ID, memberId, checkedInAt: existing?.checkedInAt || new Date().toISOString() };
-  return { ...state, attendance: [...state.attendance.filter(a => a.id !== record.id), record], results: [], imports: [] };
+  return replaceAttendance(state, [...state.attendance.filter(a => a.id !== record.id), record]);
 }
 export function saveProfile(state: DemoState, authId: string, name: string, username: string, pdga: string): DemoState {
   if (!name.trim()) throw new Error('Enter a display name');
@@ -92,8 +101,8 @@ export function commitResults(state: DemoState, rows: ResultRow[], choices: Reco
   if (!preview.ready) throw new Error('Resolve all exceptions and missing attendees before committing');
   const canonical = preview.resolved.filter(r => r.memberId !== 'exclude').map(r => [r.memberId, r.row]).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
   const id = JSON.stringify(canonical); // full canonical fingerprint, no collision-prone row IDs
-  if (state.results.length && state.results.every(result => result.eventId !== DEMO_EVENT_ID || result.importId === id)) return state;
-  return { ...state, results: preview.resolved.filter(r => r.memberId !== 'exclude').map(r => ({ ...r.row, memberId: r.memberId, eventId: DEMO_EVENT_ID, importId: id })),
+  if (state.results.length && state.results.every(result => result.eventId !== DEMO_EVENT_ID || result.importId === id)) return state.resultsReviewRequired ? { ...state, resultsReviewRequired: false } : state;
+  return { ...state, resultsReviewRequired: false, results: preview.resolved.filter(r => r.memberId !== 'exclude').map(r => ({ ...r.row, memberId: r.memberId, eventId: DEMO_EVENT_ID, importId: id })),
     imports: state.imports.some(batch => batch.id === id && batch.eventId === DEMO_EVENT_ID) ? state.imports : [...state.imports, { id, eventId: DEMO_EVENT_ID, filename, importedAt: new Date().toISOString() }] };
 }
 export const SAMPLE_ROWS = [

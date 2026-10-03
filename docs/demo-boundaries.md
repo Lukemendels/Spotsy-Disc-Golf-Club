@@ -24,6 +24,10 @@ The demo has one fixed sample league event. New public demo events/quicklinks ar
 
 ## Results boundary
 
+Ordinary check-in, division/tag edits and payment confirmation preserve imported score rows and workbook history. Tag and ace previews use the current tags and staff payment confirmations. Adding/removing attendees marks results as needing reconciliation and hides those previews until a reviewed import covers the current roster. Loading the synthetic roster is an explicitly labeled scenario reset that clears sample results/history.
+
+The automated browser walkthrough blocks service workers and external requests to verify the isolated online demo deterministically. It does not establish offline/PWA installation, stale-cache recovery or upgrade behavior; these remain unverified acceptance work.
+
 Manual XLSX upload only, maximum 5 MB. No UDisc OAuth/API has been established. No scraping, live synchronization or invented PDGA integration is implemented. Select one worksheet/round with compatible score headers; do not combine multiple rounds and infer tag policy. Duplicate/guest/changed-handle exceptions require explicit reconciliation. PDGA is optional corroboration, and display name is never an identity key.
 
 Tag handoff implements the prior prototype policy as a **preview**, not club-approved settlement. Separate incoming tag pools remain separate. Duplicate tags block that pool's preview. Hole scores of 1 identify possible aces; absent hole columns cannot establish no ace. The demo does not assert prize amounts, actual payments or paid membership.

@@ -25,6 +25,7 @@ export const ClubOpsPage: React.FC<ClubOpsPageProps> = ({ courses, events, onCre
           <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold uppercase tracking-wider mb-1"><Wrench className="w-4 h-4" /><span>Club Operations Concept</span></div>
           <h1 className="text-2xl font-extrabold tracking-tight">Thursday Night League Workflow</h1>
           <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">A single operating flow from QR check-in through the 6:00 PM shotgun, with UDisc remaining the score system of record after the round.</p>
+          <p className="mt-2 text-xs text-amber-300">One fixed sample league drives the workflow below. Create Club Event adds a calendar listing and quicklink; it does not create another league roster or results workflow.</p>
         </div>
         <button disabled={!isOrganizer} onClick={() => setIsEventModalOpen(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition shrink-0 flex items-center gap-2"><CalendarPlus className="w-4 h-4" /> Create Club Event</button>
       </div>

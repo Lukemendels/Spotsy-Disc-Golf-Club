@@ -90,7 +90,7 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
   };
 
   const handleLeaveRound = async (round: Round) => {
-    if (!currentUserId) return;
+    if (!currentUserId || !round.participantIds?.includes(currentUserId) || !["open", "full"].includes(round.status)) return;
     setActionLoadingId(round.id);
     try {
       const roundRef = doc(db, "rounds", round.id);
@@ -319,11 +319,11 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
                     {isJoined ? (
                       <button
                         onClick={() => handleLeaveRound(round)}
-                        disabled={actionLoadingId === round.id}
+                        disabled={!["open", "full"].includes(round.status) || actionLoadingId === round.id}
                         className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3.5 py-1.5 rounded-lg text-xs border border-rose-200 flex items-center gap-1.5 transition"
                       >
                         <UserMinus className="w-3.5 h-3.5" />
-                        <span>Leave Card</span>
+                        <span>{["open", "full"].includes(round.status) ? "Leave Card" : "Closed card — read only"}</span>
                       </button>
                     ) : (
                       <button

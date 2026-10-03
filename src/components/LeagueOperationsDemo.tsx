@@ -38,6 +38,7 @@ interface DemoCard {
 
 const DIVISION_ORDER = new Map(DEMO_DIVISIONS.map((division, index) => [division, index]));
 const HOLES = Array.from({ length: 18 }, (_, index) => index + 1);
+const cardRosterSignature = (players: LeagueCheckIn[]) => JSON.stringify(players.map(({ id, name, division, spotsyTag, staffordTag }) => ({ id, name, division, spotsyTag, staffordTag })));
 
 function divisionLabel(players: LeagueCheckIn[]): string {
   const divisions = [...new Set(players.map((player) => player.division))];
@@ -74,13 +75,14 @@ export const LeagueOperationsDemo: React.FC = () => {
   const [cards, setCards] = useState<DemoCard[]>([]);
   const [published, setPublished] = useState(false);
   const [copied, setCopied] = useState(false);
-  const rosterSignature = useRef(JSON.stringify(players));
+  const rosterSignature = useRef(cardRosterSignature(players));
 
   useEffect(() => {
     const refresh = () => {
       const next = loadLeagueCheckIns();
-      const signature = JSON.stringify(next);
+      const signature = cardRosterSignature(next);
       if (signature !== rosterSignature.current) { setCards([]); setPublished(false); rosterSignature.current = signature; }
+      else setCards(current => current.map(card => ({ ...card, players: card.players.map(player => next.find(p => p.id === player.id) || player) })));
       setPlayers(next); setCheckInClosed(loadMembers().locked);
     };
     window.addEventListener(LEAGUE_CHECKIN_EVENT_KEY, refresh);
@@ -95,9 +97,9 @@ export const LeagueOperationsDemo: React.FC = () => {
   const acePotCount = players.filter((player) => player.acePotPaid).length;
   const spotsyTagCount = players.filter((player) => Number.isFinite(player.spotsyTag)).length;
   const staffordTagCount = players.filter((player) => Number.isFinite(player.staffordTag)).length;
-  const persistPlayers = (next: LeagueCheckIn[]) => { setPlayers(next); saveLeagueCheckIns(next); setCards([]); setPublished(false); };
+  const persistPlayers = (next: LeagueCheckIn[]) => { saveLeagueCheckIns(next); };
   const updatePlayer = (id: string, patch: Partial<LeagueCheckIn>) => persistPlayers(players.map((player) => player.id === id ? { ...player, ...patch } : player));
-  const loadDemoRoster = () => { persistPlayers(buildDemoCheckIns()); setCheckInClosed(false); };
+  const loadDemoRoster = () => { persistPlayers(buildDemoCheckIns()); setCards([]); setPublished(false); setCheckInClosed(false); };
   const clearRoster = () => { persistPlayers([]); setCheckInClosed(false); saveMembers({ ...loadMembers(), locked: false }); };
   const generateCards = () => {
     if (!players.length) return;
@@ -157,11 +159,12 @@ export const LeagueOperationsDemo: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button onClick={loadDemoRoster} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">Load synthetic roster · {DEMO_CHECKIN_COUNT}</button>
+          <button onClick={loadDemoRoster} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">Load synthetic roster — resets sample results · {DEMO_CHECKIN_COUNT}</button>
           <button onClick={clearRoster} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"><RotateCcw className="mr-1 inline h-3.5 w-3.5" />Clear</button>
           <button onClick={() => { const locked = !loadMembers().locked; saveMembers({ ...loadMembers(), locked }); setCheckInClosed(locked); setCards([]); setPublished(false); }} className={`ml-auto rounded-lg px-3 py-2 text-xs font-bold ${checkInClosed ? "bg-green-100 text-green-800" : "bg-slate-900 text-white"}`}><Lock className="mr-1 inline h-3.5 w-3.5" />{checkInClosed ? "Reopen check-in" : "Close check-in · 5:45"}</button>
         </div>
 
+        <p className="text-xs text-slate-500">Payment updates refresh ace eligibility and tag edits recalculate the tag preview; imported scores and history stay saved. Division/tag edits require rebuilding cards. Adding or removing attendees requires results reconciliation.</p>
         {players.length > 0 && <RosterTable players={players} checkInClosed={checkInClosed} updatePlayer={updatePlayer} removePlayer={id => persistPlayers(players.filter(p => p.id !== id))} />}
       </section>
 

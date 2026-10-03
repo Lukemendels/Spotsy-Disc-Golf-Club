@@ -130,6 +130,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <p className="text-xs text-amber-300">Adds a local calendar listing and optional quicklink. League check-in, cards and results use one fixed sample Thursday event; creating a listing does not create another league workflow.</p>
           {errorMsg && <div className="p-3 bg-rose-950 border border-rose-800 text-rose-200 text-xs rounded-xl">{errorMsg}</div>}
 
           <button type="button" onClick={applyThursdayLeaguePreset} className="w-full flex items-center justify-center gap-2 rounded-xl border border-amber-700 bg-amber-950/40 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-amber-950/70">

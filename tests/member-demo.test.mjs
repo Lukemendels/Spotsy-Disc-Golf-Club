@@ -1,11 +1,44 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { initialState, checkIn, saveProfile, memberForIdentity, approveClaim, parseResultRows, reconcile, commitResults, SAMPLE_ROWS } from '../src/lib/memberDemo.ts';
+import { initialState, checkIn, checkInFormValues, replaceAttendance, saveProfile, memberForIdentity, approveClaim, parseResultRows, reconcile, commitResults, SAMPLE_ROWS, saveMembers, loadMembers } from '../src/lib/memberDemo.ts';
+import { loadLeagueCheckIns, saveLeagueCheckIns } from '../src/lib/leagueDemo.ts';
 import { fastThreeCardSizes, cardSizes, shotgunHoleOrder } from '../src/lib/leagueCards.ts';
 const fields = { division: 'MA3', aceRequested: true, spotsyTag: 4 };
 function field() { let s = initialState(); for (const m of s.members) s = checkIn(s, m.id, fields); return s; }
 const sample = () => parseResultRows(SAMPLE_ROWS.slice(0, 4));
+
+test('staff form uses the selected stable ID and a fresh guest starts empty', () => {
+  let s = checkIn(initialState(), 'sample-alex-a', { ...fields, division: 'MA4', spotsyTag: 1 });
+  s = checkIn(s, 'sample-alex-b', { ...fields, spotsyTag: 2, staffordTag: 101 });
+  assert.deepEqual(checkInFormValues(s, 'sample-alex-b'), { division: 'MA3', tag: '2', stafford: '101', ace: true });
+  assert.deepEqual(checkInFormValues(s, 'sample-alex-a'), { division: 'MA4', tag: '1', stafford: '', ace: true });
+  assert.deepEqual(checkInFormValues(s, 'new-guest'), { division: 'MA4', tag: '', stafford: '', ace: false });
+});
+
+test('payment edits and repeated check-in preserve raw imports; roster changes require review', () => {
+  const originals = { localStorage: globalThis.localStorage, window: globalThis.window, CustomEvent: globalThis.CustomEvent };
+  let stored;
+  globalThis.localStorage = { getItem: () => stored, setItem: (_key, value) => { stored = value; } };
+  globalThis.window = { dispatchEvent() {} }; globalThis.CustomEvent = class {};
+  try {
+    const imported = JSON.parse(JSON.stringify(commitResults(field(), sample(), {}, 'evidence.xlsx')));
+    saveMembers(imported);
+    saveLeagueCheckIns(loadLeagueCheckIns().map(p => ({ ...p, acePotPaid: true })));
+    let s = loadMembers();
+    assert.deepEqual(s.results, imported.results); assert.deepEqual(s.imports, imported.imports);
+    assert.equal(s.payments.every(p => p.aceConfirmed), true); assert.equal(s.resultsReviewRequired, false);
+    s = checkIn(s, 'sample-alex-a', fields);
+    s = checkIn(s, 'sample-alex-b', { ...fields, division: 'MA1', spotsyTag: 50 });
+    assert.deepEqual(s.results, imported.results); assert.deepEqual(s.imports, imported.imports);
+    assert.equal(s.resultsReviewRequired, false);
+    s = replaceAttendance(s, s.attendance.filter(a => a.memberId !== 'sample-morgan'));
+    assert.equal(s.resultsReviewRequired, true); assert.deepEqual(s.results, imported.results);
+    s = checkIn(s, 'sample-morgan', fields);
+    s = commitResults(s, sample(), {}, 'same-evidence.xlsx');
+    assert.equal(s.resultsReviewRequired, false); assert.deepEqual(s.imports, imported.imports);
+  } finally { for (const [key, value] of Object.entries(originals)) { if (value === undefined) delete globalThis[key]; else globalThis[key] = value; } }
+});
 test('same display names stay separate and returning check-in retains stable attendance ID', () => {
   let s = initialState(); s = checkIn(s, 'sample-alex-a', fields); s = checkIn(s, 'sample-alex-b', fields);
   const first = s.attendance[0]; s = checkIn(s, 'sample-alex-a', { ...fields, division: 'MA2' });
