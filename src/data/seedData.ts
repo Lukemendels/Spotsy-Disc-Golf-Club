@@ -1,6 +1,6 @@
 import { Course, Officer, Event, Round } from "../types";
 import { db } from "../lib/firebase";
-import { collection, getDocs, doc, setDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc } from "../lib/demoDatabase";
 
 // Reference directory for the concept demo. Course facts/layouts were checked against
 // current UDisc/PDGA/local course information in August 2026. The live app deliberately
@@ -150,6 +150,7 @@ export const INITIAL_OFFICERS: Officer[] = [
 export const INITIAL_EVENTS: Event[] = [
   {
     id: "demo-thursday-league",
+    officialUrl: "https://example.com/udisc/sample-thursday",
     title: "Thursday Night League — Demo Event",
     category: "League",
     courseId: "loriella-park",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Sidebar } from "./components/Sidebar";
 import { Header } from "./components/Header";
@@ -16,7 +16,10 @@ import { LeadershipPage } from "./pages/LeadershipPage";
 import { AdminPage } from "./pages/AdminPage";
 import { CommunityFeedPage } from "./pages/CommunityFeedPage";
 import { INITIAL_COURSES, INITIAL_OFFICERS, INITIAL_EVENTS, INITIAL_ROUNDS } from "./data/seedData";
-import { Event } from "./types";
+import { collection, onSnapshot, initializeDemoCollection, addDoc } from "./lib/demoDatabase";
+import { MemberLeagueDemo } from "./components/MemberLeagueDemo";
+import { db } from "./lib/firebase";
+import { Event, Round } from "./types";
 import { Check, Calendar, Users, GraduationCap, Sparkles, MapPin, UserCheck, ShieldAlert, Home, Wrench, MessagesSquare } from "lucide-react";
 
 function AppContent() {
@@ -25,16 +28,24 @@ function AppContent() {
 
   const courses = INITIAL_COURSES;
   const officers = INITIAL_OFFICERS;
-  const rounds = INITIAL_ROUNDS;
+  const [rounds, setRounds] = useState<Round[]>(INITIAL_ROUNDS);
   const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
 
+  useEffect(() => {
+    initializeDemoCollection("rounds", INITIAL_ROUNDS);
+    initializeDemoCollection("events", INITIAL_EVENTS);
+    const offRounds = onSnapshot(collection(db, "rounds"), snap => setRounds(snap.docs.map(d => ({ id: d.id, ...d.data() } as Round))));
+    const offEvents = onSnapshot(collection(db, "events"), snap => setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as Event))));
+    return () => { offRounds(); offEvents(); };
+  }, []);
   const { userProfile } = useAuth();
   const isAdmin = userProfile?.role === "club_admin";
 
   const handleJoinRoundFromHome = () => setActiveTab("rounds");
-  const handleCreateDemoEvent = (event: Event) => setEvents((current) => [event, ...current.filter((item) => item.id !== event.id)]);
+  const handleCreateDemoEvent = async (event: Event) => { const { id, ...record } = event; await addDoc(collection(db, "events"), record); };
 
   const navItems = [
+    { id: "member", label: "Profile & League Check-In", icon: UserCheck },
     { id: "home", label: "Dashboard", icon: Home },
     { id: "events", label: "Events", icon: Calendar },
     { id: "rounds", label: "Casual Rounds", icon: Users },
@@ -53,6 +64,7 @@ function AppContent() {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         <PWAInstaller />
+        <div className="bg-amber-100 px-4 py-2 text-xs text-amber-950">Local adoption demo • synthetic league/member records • no real sign-in, email, payment or Firebase writes. Source feed retains its provenance. Please use fictional inputs.</div>
         <Header events={events} activeTab={activeTab} setActiveTab={setActiveTab} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
         {mobileMenuOpen && (
@@ -71,6 +83,7 @@ function AppContent() {
         )}
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 pb-20 lg:pb-8">
+          {activeTab === "member" && <MemberLeagueDemo />}
           {activeTab === "home" && <HomePage events={events} rounds={rounds} courses={courses} onNavigate={setActiveTab} onJoinRound={handleJoinRoundFromHome} />}
           {activeTab === "events" && <EventsPage events={events} courses={courses} onCreateEvent={handleCreateDemoEvent} />}
           {activeTab === "rounds" && <RoundsPage rounds={rounds} courses={courses} />}
@@ -84,7 +97,7 @@ function AppContent() {
         </div>
 
         <footer className="h-10 bg-white border-t border-slate-200 flex items-center px-4 sm:px-6 lg:px-8 shrink-0 justify-between text-[11px] text-slate-500 z-10">
-          <span className="font-medium text-slate-600">Concept demo · Course directory references current UDisc/PDGA information</span>
+          <span className="font-medium text-slate-600">Local demo • club facts need approval • source feed retained</span>
           <span className="text-[10px] text-slate-400 font-mono hidden md:block">Spotsy Disc Golf Digital Platform</span>
         </footer>
       </main>

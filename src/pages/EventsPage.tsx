@@ -25,7 +25,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ events, courses, onRefre
     return true;
   });
   const sortedEvents = [...filteredEvents].sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
-  const canOpenCreator = Boolean(onCreateEvent) || isAdmin;
+  const canOpenCreator = isAdmin;
 
   return (
     <div className="space-y-6">
@@ -73,6 +73,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ events, courses, onRefre
                   <span className="text-xs text-slate-500 font-semibold flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-400" />{eventDate.toLocaleDateString([], { weekday: "short" })} @ {eventDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                 </div>
                 <h3 className="text-base font-bold text-slate-900">{event.title}</h3>
+                {event.officialUrl && /^https:\/\//i.test(event.officialUrl) && <a className="text-xs font-bold text-green-800 underline" href={event.officialUrl} target="_blank" rel="noopener noreferrer">Event quicklink {event.isDemo ? "(sample; not live event)" : ""}</a>}
                 <p className="text-xs text-slate-600 leading-relaxed">{event.description}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-xs text-slate-500 font-medium">
                   {course && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-green-600" />{course.name}</span>}

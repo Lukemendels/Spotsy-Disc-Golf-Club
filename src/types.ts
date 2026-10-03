@@ -10,6 +10,7 @@ export interface Event {
   description: string;
   isOfficial: boolean;
   isDemo?: boolean;
+  officialUrl?: string;
 }
 
 export interface Course {

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { CalendarPlus, Clock3, FileUp, QrCode, Shuffle, Wrench } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { MemberLeagueDemo } from "../components/MemberLeagueDemo";
 import { Course, Event } from "../types";
 import { CreateEventModal } from "../components/CreateEventModal";
 import { LeagueOperationsDemo } from "../components/LeagueOperationsDemo";
@@ -12,6 +14,8 @@ interface ClubOpsPageProps {
 
 export const ClubOpsPage: React.FC<ClubOpsPageProps> = ({ courses, events, onCreateEvent }) => {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const { userProfile, signInDemoUser } = useAuth();
+  const isOrganizer = userProfile?.role === "club_admin";
   const demoEvents = events.filter((event) => event.isDemo);
 
   return (
@@ -21,8 +25,9 @@ export const ClubOpsPage: React.FC<ClubOpsPageProps> = ({ courses, events, onCre
           <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold uppercase tracking-wider mb-1"><Wrench className="w-4 h-4" /><span>Club Operations Concept</span></div>
           <h1 className="text-2xl font-extrabold tracking-tight">Thursday Night League Workflow</h1>
           <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">A single operating flow from QR check-in through the 6:00 PM shotgun, with UDisc remaining the score system of record after the round.</p>
+          <p className="mt-2 text-xs text-amber-300">One fixed sample league drives the workflow below. Create Club Event adds a calendar listing and quicklink; it does not create another league roster or results workflow.</p>
         </div>
-        <button onClick={() => setIsEventModalOpen(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition shrink-0 flex items-center gap-2"><CalendarPlus className="w-4 h-4" /> Create Club Event</button>
+        <button disabled={!isOrganizer} onClick={() => setIsEventModalOpen(true)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition shrink-0 flex items-center gap-2"><CalendarPlus className="w-4 h-4" /> Create Club Event</button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
@@ -38,7 +43,7 @@ export const ClubOpsPage: React.FC<ClubOpsPageProps> = ({ courses, events, onCre
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-4"><p className="text-xs font-bold uppercase tracking-wider text-blue-800">Demo events created this session</p><div className="mt-2 flex flex-wrap gap-2">{demoEvents.map((event) => <span key={event.id} className="rounded-lg bg-white border border-blue-200 px-3 py-2 text-xs font-semibold text-slate-800">{event.title} · {new Date(event.startDateTime).toLocaleDateString()} {event.layout ? `· ${event.layout}` : ""}</span>)}</div></div>
       )}
 
-      <LeagueOperationsDemo />
+      {isOrganizer ? <LeagueOperationsDemo /> : <div className="space-y-3 rounded-xl border bg-white p-5"><p className="text-sm">Organizer tools are a simulated role on this browser. Members use their profile to check in.</p><button className="rounded-lg bg-amber-400 p-3 font-bold" onClick={() => signInDemoUser("club_admin")}>Enter organizer demo</button><MemberLeagueDemo /></div>}
 
       <CreateEventModal courses={courses} isOpen={isEventModalOpen} onClose={() => setIsEventModalOpen(false)} onCreateEvent={onCreateEvent} />
     </div>

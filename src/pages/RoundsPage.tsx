@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { CreateRoundModal } from "../components/CreateRoundModal";
 import { RoundChatThread } from "../components/RoundChatThread";
 import { db } from "../lib/firebase";
-import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove } from "../lib/demoDatabase";
 import {
   Users,
   Plus,
@@ -64,7 +64,7 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
       };
     }
 
-    if (round.participantIds?.length >= round.maxCapacity) {
+    if (round.status !== "open" || round.participantIds?.includes(profile.uid) || round.participantIds?.length >= round.maxCapacity) {
       alert("This casual round card is already full!");
       return;
     }
@@ -90,7 +90,7 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
   };
 
   const handleLeaveRound = async (round: Round) => {
-    if (!currentUserId) return;
+    if (!currentUserId || !round.participantIds?.includes(currentUserId) || !["open", "full"].includes(round.status)) return;
     setActionLoadingId(round.id);
     try {
       const roundRef = doc(db, "rounds", round.id);
@@ -132,7 +132,7 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
             Spotsylvania Casual Rounds
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 mt-1">
-            Post an open card, join local players at Loriella or Pratt, and coordinate tee times in real-time.
+            Post an open card, join local players at Loriella or Pratt, and coordinate tee times locally in this demo.
           </p>
         </div>
 
@@ -319,11 +319,11 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
                     {isJoined ? (
                       <button
                         onClick={() => handleLeaveRound(round)}
-                        disabled={actionLoadingId === round.id}
+                        disabled={!["open", "full"].includes(round.status) || actionLoadingId === round.id}
                         className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3.5 py-1.5 rounded-lg text-xs border border-rose-200 flex items-center gap-1.5 transition"
                       >
                         <UserMinus className="w-3.5 h-3.5" />
-                        <span>Leave Card</span>
+                        <span>{["open", "full"].includes(round.status) ? "Leave Card" : "Closed card — read only"}</span>
                       </button>
                     ) : (
                       <button
@@ -339,7 +339,7 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
 
                   {canManage && (
                     <div className="flex items-center gap-2">
-                      {round.status === "open" && (
+                      {(round.status === "open" || round.status === "full") && (
                         <>
                           <button
                             onClick={() => handleUpdateStatus(round.id, "completed")}

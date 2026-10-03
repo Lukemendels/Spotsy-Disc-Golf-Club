@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Course } from "../types";
 import { db } from "../lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc } from "../lib/demoDatabase";
 import {
   GraduationCap,
   Sparkles,
@@ -166,7 +166,7 @@ export const NewToDiscGolfPage: React.FC<NewToDiscGolfPageProps> = () => {
             <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto" />
             <h4 className="text-base font-bold text-slate-900">Welcome to the Club Community!</h4>
             <p className="text-xs text-slate-600">
-              We saved your interest. Our board members will reach out before our next beginner clinic at Pratt Park!
+              Sample interest saved on this browser. No clinic registration, board notification or email delivery was created.
             </p>
             <button
               onClick={() => setSubmitted(false)}

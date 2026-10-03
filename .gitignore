@@ -6,3 +6,8 @@ coverage/
 *.log
 .env*
 !.env.example
+
+.validation/
+.npm-cache/
+edit-demo.mjs
+refine-demo.mjs
