@@ -250,9 +250,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <span className="font-bold text-slate-900 text-xs truncate">{c.name}</span>
                 <span className="text-[10px] font-semibold text-slate-500">{c.holes} Holes</span>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">{c.accessType}</p>
+              <p className="text-[11px] text-slate-500 mt-1">{c.accessFees}</p>
               <div className="mt-2 text-[10px] text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded inline-block">
-                {c.status}
+                Sample course information
               </div>
             </div>
           ))}

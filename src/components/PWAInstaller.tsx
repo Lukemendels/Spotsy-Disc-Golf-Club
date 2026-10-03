@@ -41,34 +41,7 @@ export const PWAInstaller: React.FC = () => {
     }
   };
 
-  const handleToggleNotifications = async () => {
-    if (!("Notification" in window)) {
-      setNotifStatusMsg("Notifications are not supported on this browser.");
-      return;
-    }
-
-    if (Notification.permission === "granted") {
-      setNotifStatusMsg("Subscribed! You will receive upcoming event & casual round reminders.");
-      setNotificationsEnabled(true);
-      return;
-    }
-
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      setNotificationsEnabled(true);
-      setNotifStatusMsg("Push notifications enabled for Spotsy Disc Golf!");
-      // Send test local notification if supported
-      if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-        const registration = await navigator.serviceWorker.ready;
-        registration.showNotification("Spotsy Disc Golf Club", {
-          body: "Notifications active! You will stay updated on casual rounds and course closures.",
-          icon: "/pwa-192.png",
-        });
-      }
-    } else {
-      setNotifStatusMsg("Notification permission was denied.");
-    }
-  };
+  const handleToggleNotifications = async () => setNotifStatusMsg("Demo only: no push subscription or reminder delivery is connected.");
 
   return (
     <div className="bg-emerald-900/90 text-emerald-50 backdrop-blur border-b border-emerald-700/50 px-4 py-2 text-xs sm:text-sm">
@@ -78,7 +51,7 @@ export const PWAInstaller: React.FC = () => {
             PWA
           </span>
           <span>
-            Install Spotsy Disc Golf App for fast offline access & tee time updates
+            Installable demo concept • local data only; no live tee-time alerts
           </span>
         </div>
 
@@ -104,12 +77,12 @@ export const PWAInstaller: React.FC = () => {
             {notificationsEnabled ? (
               <>
                 <BellRing className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Notifs On</span>
+                <span>Notifications concept</span>
               </>
             ) : (
               <>
                 <Bell className="w-3.5 h-3.5" />
-                <span>Enable Notifs</span>
+                <span>Notifications concept</span>
               </>
             )}
           </button>

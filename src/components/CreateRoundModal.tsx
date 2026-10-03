@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Course } from "../types";
 import { db } from "../lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc } from "../lib/demoDatabase";
 import { X, Calendar, Clock, MapPin, Users, Activity, Sparkles } from "lucide-react";
 
 interface CreateRoundModalProps {

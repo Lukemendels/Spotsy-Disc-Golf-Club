@@ -25,6 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   const isAdmin = userProfile?.role === "club_admin";
 
   const navItems = [
+    { id: "member", label: "Profile & League", icon: UserCheck },
     { id: "home", label: "Dashboard", icon: Home },
     { id: "events", label: "Events", icon: Calendar },
     { id: "rounds", label: "Casual Rounds", icon: Users },
@@ -73,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
         ) : (
           <div className="space-y-2">
             <div className="flex gap-2"><button onClick={() => signInDemoUser("user")} className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-medium border border-slate-700">Demo Login</button><button onClick={() => signInDemoUser("club_admin")} className="flex-1 py-1.5 bg-amber-600/30 hover:bg-amber-600/40 text-amber-300 rounded text-xs font-bold border border-amber-500/40">Admin Mode</button></div>
-            <button onClick={signInWithGoogle} className="w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded text-xs font-bold transition-colors uppercase tracking-wider">Google Sign In</button>
+            <button onClick={() => setActiveTab("member")} className="w-full py-2 bg-green-600 hover:bg-green-500 text-white rounded text-xs font-bold transition-colors uppercase tracking-wider">Profile & League Demo</button>
           </div>
         )}
       </div>

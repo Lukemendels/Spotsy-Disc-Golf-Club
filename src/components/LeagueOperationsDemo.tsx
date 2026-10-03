@@ -1,4 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { cardSizes, shotgunHoleOrder } from "../lib/leagueCards";
+import React, { useEffect, useRef, useState } from "react";
+import { MemberLeagueDemo } from "./MemberLeagueDemo";
+import { ResultsImportDemo } from "./ResultsImportDemo";
+import { loadMembers, saveMembers } from "../lib/memberDemo";
 import { QRCodeSVG } from "qrcode.react";
 import {
   CheckCircle2,
@@ -32,89 +36,8 @@ interface DemoCard {
   players: LeagueCheckIn[];
 }
 
-interface ImportedTagResult {
-  playerId: string;
-  name: string;
-  score: number;
-  scoreSource: string;
-  spotsyTag?: number;
-  staffordTag?: number;
-  spotsyOut?: number;
-  staffordOut?: number;
-  aceHoles: string[];
-  acePotPaid: boolean;
-}
-
 const DIVISION_ORDER = new Map(DEMO_DIVISIONS.map((division, index) => [division, index]));
 const HOLES = Array.from({ length: 18 }, (_, index) => index + 1);
-
-const DEMO_UDISC_CSV = `division,position,position_raw,name,event_relative_score,event_total_score,pdga_number,username,round_relative_score,round_total_score,round_rating,paid,checked_in,starting_hole,start_time,hole_1,hole_2,hole_3,hole_4,hole_5,hole_6,hole_7,hole_8,hole_9,hole_10,hole_11,hole_12,hole_13,hole_14,hole_15,hole_16,hole_17,hole_18
-MPO,1,1,Emmanuele Lizama,-12,46,133726,emmanuele,-12,46,265,No,Yes,6,"Aug 27, 2026, 6:00 PM",2,2,3,1,2,4,4,2,3,2,2,2,2,3,3,4,3,2
-MPO,2,2,Mark Gibson,-11,47,122326,gibsonmark,-11,47,258,No,Yes,1,"Aug 27, 2026, 5:58 PM",2,3,2,3,2,3,4,3,2,2,3,3,2,3,3,3,2,2
-MPO,3,3,Brandon Kilby,-8,50,31334,kilby540,-8,50,238,No,Yes,18,"Aug 27, 2026, 6:01 PM",3,3,3,2,4,3,3,2,3,2,2,2,3,3,3,4,2,3
-MPO,4,4,Gerald Mudd,-7,51,14741,grumpa420,-7,51,231,No,Yes,6,"Aug 27, 2026, 6:00 PM",2,2,4,2,2,5,4,3,2,3,4,3,3,3,2,3,2,2
-MPO,T5,5,Bob Cannon,-3,55,26532,dgolfnbob,-3,55,206,No,Yes,1,"Aug 27, 2026, 5:58 PM",4,3,3,2,2,3,4,3,3,2,4,3,3,4,4,4,2,2
-MPO,T5,5,Ben Vaca,-3,55,193609,meenbean,-3,55,206,No,Yes,1,"Aug 27, 2026, 5:58 PM",2,2,4,2,3,5,4,3,3,2,2,2,4,4,3,4,3,3
-MA1,1,1,Kylie Stark,-6,52,,kstark24,-6,52,225,No,Yes,11,"Aug 27, 2026, 5:59 PM",3,3,2,2,3,4,4,3,2,2,2,3,3,4,2,3,3,4
-MA1,2,2,Chris Kowalski,-3,55,20634,kowalvandal,-3,55,206,No,Yes,8,"Aug 27, 2026, 6:00 PM",3,3,3,2,2,5,4,3,3,2,2,3,3,4,2,4,3,4
-MA1,3,3,Justin Laughlin,0,58,19095,frolfgrass,0,58,189,No,Yes,15,"Aug 27, 2026, 6:02 PM",3,4,3,3,3,4,5,2,3,3,3,4,3,4,3,3,3,2
-MA2,1,1,John wallingford,-4,54,,kosmicvanquish,-4,54,212,No,Yes,9,"Aug 27, 2026, 6:00 PM",3,3,3,3,3,4,4,2,3,2,3,5,3,3,2,3,3,2
-MA2,2,2,Jeff Perkins,-2,56,236235,jeffperkins,-2,56,200,No,Yes,18,"Aug 27, 2026, 6:01 PM",3,4,3,3,2,3,4,3,3,3,4,3,2,5,3,3,3,2
-MA2,T3,3,Abby kowalski,0,58,118814,abbykowal,0,58,189,No,Yes,8,"Aug 27, 2026, 6:00 PM",3,3,4,2,4,4,4,2,3,4,2,5,3,3,3,4,3,2
-MA2,T3,3,Corey Wiseman,0,58,127115,cwiseman1989,0,58,189,No,Yes,18,"Aug 27, 2026, 6:01 PM",2,3,3,3,3,3,4,3,2,2,3,4,4,5,2,5,3,4
-MA2,T3,3,Allan Stephens,0,58,129942,dewerson,0,58,189,No,Yes,18,"Aug 27, 2026, 6:01 PM",3,2,3,3,4,3,4,2,3,3,3,3,3,5,3,4,3,4
-MA2,6,6,Tanner Rains,3,61,300835,tmon3yaot,3,61,172,No,Yes,17,"Aug 27, 2026, 6:01 PM",4,3,4,2,6,8,3,3,3,2,2,3,3,3,3,3,2,4
-MA2,7,7,Giovanni Lizama,4,62,133724,giovannilizama,4,62,167,No,Yes,6,"Aug 27, 2026, 6:00 PM",3,3,3,3,4,5,5,3,2,3,4,3,3,4,3,5,4,2
-MA3,1,1,Cody Beard,1,59,296651,bearclaw27,1,59,183,No,Yes,10,"Aug 27, 2026, 5:58 PM",3,3,3,2,3,5,4,5,3,2,3,3,3,4,2,5,3,3
-MA3,2,2,Luke Mendelsohn,2,60,320056,lukemendelsohn,2,60,178,No,Yes,12,"Aug 27, 2026, 5:56 PM",3,3,3,3,3,5,5,3,3,3,3,3,3,4,3,4,3,3
-MA3,3,3,David Chatelain,3,61,314889,dmjdav,3,61,172,No,Yes,12,"Aug 27, 2026, 5:56 PM",3,3,4,3,4,6,4,4,3,3,2,3,3,4,2,4,2,4
-MA3,4,4,Julian Shapiro,6,64,333751,bottlzz,6,64,157,No,Yes,9,"Aug 27, 2026, 6:00 PM",5,3,4,3,3,4,5,3,3,3,3,4,3,5,2,5,3,3
-MA3,5,5,Munseok Kim,7,65,,munseokkim98,7,65,152,No,Yes,9,"Aug 27, 2026, 6:00 PM",3,4,3,2,3,4,5,2,3,3,2,5,3,6,4,6,4,3
-MA3,T6,6,James Gibson,13,71,211213,jamesgibson128,13,71,124,No,Yes,17,"Aug 27, 2026, 6:01 PM",4,2,4,3,3,9,6,4,3,4,4,6,3,3,3,5,2,3
-MA3,T6,6,William Alex Gibson,13,71,,wagibson,13,71,124,No,Yes,11,"Aug 27, 2026, 5:59 PM",3,4,3,2,3,6,5,5,3,3,3,4,4,5,4,8,3,3
-MA3,8,8,Nathon Coe ,17,75,318150,nath0n,17,75,108,No,Yes,12,"Aug 27, 2026, 5:56 PM",4,4,4,4,3,5,5,4,5,4,2,4,3,7,4,5,5,3
-MA4,1,1,Gerald Williams,7,65,247076,gwwilliams,7,65,152,No,Yes,10,"Aug 27, 2026, 5:58 PM",3,3,3,3,3,6,5,4,2,3,4,4,4,4,3,4,4,3
-MA4,2,2,Cade Beard,8,66,296687,berryboys,8,66,147,No,Yes,10,"Aug 27, 2026, 5:58 PM",3,3,3,3,4,6,5,3,4,4,3,4,3,4,3,4,5,2
-MA4,3,3,David Kerns,10,68,,tech13005,10,68,137,No,Yes,8,"Aug 27, 2026, 6:00 PM",3,3,3,3,3,6,5,4,3,4,3,5,4,5,3,4,4,3
-MA4,4,4,Zachary Knerr,13,71,274949,zak616,13,71,124,No,Yes,17,"Aug 27, 2026, 6:01 PM",5,5,3,3,4,5,5,4,3,4,3,4,5,3,4,5,3,3
-MA4,5,5,Corey Axelson,14,72,,axelsonc1950,14,72,120,No,Yes,15,"Aug 27, 2026, 6:02 PM",4,3,3,3,4,6,5,4,3,3,4,4,4,4,3,6,3,6
-MA4,6,6,Melissa Gibson,16,74,239388,gibsonmel,16,74,112,No,Yes,11,"Aug 27, 2026, 5:59 PM",4,5,4,3,4,6,4,4,4,3,3,3,3,6,4,7,3,4
-MA4,7,7,Bobby Zinn,39,97,,bobbyzinn,39,97,47,No,Yes,15,"Aug 27, 2026, 6:02 PM",4,5,4,4,2,7,8,6,6,6,6,7,7,7,4,5,4,5`;
-
-function fastThreeCardSizes(total: number): number[] {
-  if (total <= 0) return [];
-  if (total < 3) return [total];
-  if (total === 5) return [3, 2];
-  const threes = Math.floor(total / 3);
-  const remainder = total % 3;
-  if (remainder === 0) return Array(threes).fill(3);
-  if (remainder === 1) return [...Array(Math.max(0, threes - 1)).fill(3), 4];
-  if (threes >= 2) return [...Array(threes - 2).fill(3), 4, 4];
-  return [3, 2];
-}
-
-function balancedCardSizes(total: number, target: number): number[] {
-  if (total <= 0) return [];
-  if (total <= 5) return [total];
-  const minCards = Math.ceil(total / 5);
-  const maxCards = Math.max(minCards, Math.floor(total / 3));
-  const cardCount = Math.max(minCards, Math.min(maxCards, Math.round(total / target)));
-  const base = Math.floor(total / cardCount);
-  const remainder = total % cardCount;
-  return Array.from({ length: cardCount }, (_, index) => base + (index < remainder ? 1 : 0));
-}
-
-function cardSizes(total: number, target: number): number[] {
-  return target === 3 ? fastThreeCardSizes(total) : balancedCardSizes(total, target);
-}
-
-function shotgunHoleOrder(firstHole: number): number[] {
-  const start = Math.max(1, Math.min(18, firstHole || 1));
-  const primary = Array.from({ length: 9 }, (_, index) => ((start - 1 + index * 2) % 18) + 1);
-  const secondaryStart = (start % 18) + 1;
-  const secondary = Array.from({ length: 9 }, (_, index) => ((secondaryStart - 1 + index * 2) % 18) + 1);
-  return [...primary, ...secondary];
-}
 
 function divisionLabel(players: LeagueCheckIn[]): string {
   const divisions = [...new Set(players.map((player) => player.division))];
@@ -143,132 +66,23 @@ function buildCards(players: LeagueCheckIn[], targetCardSize: number, firstHole:
   return cards;
 }
 
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let quoted = false;
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index];
-    const next = text[index + 1];
-    if (char === '"') {
-      if (quoted && next === '"') { field += '"'; index += 1; } else quoted = !quoted;
-    } else if (char === "," && !quoted) {
-      row.push(field.trim()); field = "";
-    } else if ((char === "\n" || char === "\r") && !quoted) {
-      if (char === "\r" && next === "\n") index += 1;
-      row.push(field.trim());
-      if (row.some((value) => value.length > 0)) rows.push(row);
-      row = []; field = "";
-    } else field += char;
-  }
-  row.push(field.trim());
-  if (row.some((value) => value.length > 0)) rows.push(row);
-  return rows;
-}
-
-function normalizeHeader(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9+/-]+/g, " ").trim();
-}
-
-function findHeaderIndex(headers: string[], candidates: string[]): number {
-  const normalized = headers.map(normalizeHeader);
-  return candidates.map(normalizeHeader).map((candidate) => normalized.indexOf(candidate)).find((index) => index >= 0) ?? -1;
-}
-
-function importUDiscCsv(text: string, checkIns: LeagueCheckIn[]): { results: ImportedTagResult[]; scoreSource?: string; error?: string } {
-  const rows = parseCsv(text);
-  if (rows.length < 2) return { results: [], error: "The CSV does not contain a header row and player results." };
-  const headers = rows[0];
-  const nameIndex = findHeaderIndex(headers, ["PlayerName", "name", "player name", "player"]);
-  const relativeIndex = findHeaderIndex(headers, [
-    "round_relative_score",
-    "round relative score",
-    "event_relative_score",
-    "event relative score",
-    "+/-",
-    "relative_score",
-    "relative score",
-    "relative score total",
-    "relative score round",
-  ]);
-  const totalIndex = findHeaderIndex(headers, [
-    "round_total_score",
-    "round total score",
-    "event_total_score",
-    "event total score",
-    "Total",
-    "total_score",
-    "total score",
-    "total score total",
-    "total score round",
-  ]);
-  const holeIndexes = headers
-    .map((header, index) => ({ header, index, normalized: normalizeHeader(header) }))
-    .filter((item) => /^hole ?\d+$/.test(item.normalized));
-  if (nameIndex < 0) return { results: [], error: "Could not find a player-name column in this UDisc CSV." };
-  const scoreIndex = relativeIndex >= 0 ? relativeIndex : totalIndex;
-  if (scoreIndex < 0) return { results: [], error: "Could not find a UDisc score column. Expected +/- / relative score or Total / total score." };
-  const roster = new Map(checkIns.map((item) => [normalizePlayerName(item.name), item]));
-  const scoreSource = headers[scoreIndex];
-  const imported = rows.slice(1)
-    .filter((values) => values[nameIndex]?.trim() && normalizeHeader(values[nameIndex]) !== "par" && values[scoreIndex]?.trim() !== "")
-    .map((values, rowIndex) => {
-      const name = values[nameIndex].trim();
-      const checkIn = roster.get(normalizePlayerName(name));
-      return {
-        playerId: `udisc-${rowIndex + 1}`,
-        name,
-        score: Number(values[scoreIndex]),
-        scoreSource,
-        spotsyTag: checkIn?.spotsyTag,
-        staffordTag: checkIn?.staffordTag,
-        acePotPaid: checkIn?.acePotPaid ?? false,
-        aceHoles: holeIndexes.filter(({ index }) => Number(values[index]) === 1).map(({ header }) => header),
-      };
-    })
-    .filter((result) => Number.isFinite(result.score));
-  if (!imported.length) return { results: [], error: "No player rows with numeric scores were found in the CSV." };
-  const names = imported.map((result) => normalizePlayerName(result.name));
-  const duplicateName = names.find((name, index) => names.indexOf(name) !== index);
-  if (duplicateName) return { results: [], error: `The CSV contains more than one row for ${duplicateName}. Export one league round before assigning tags.` };
-  return { results: imported.sort((a, b) => a.score - b.score || a.name.localeCompare(b.name)), scoreSource };
-}
-
-function duplicateValues(values: Array<number | undefined>): number[] {
-  const numeric = values.filter((value): value is number => Number.isFinite(value));
-  return [...new Set(numeric.filter((value, index) => numeric.indexOf(value) !== index))];
-}
-
-function assignTagPool(results: ImportedTagResult[], input: "spotsyTag" | "staffordTag", output: "spotsyOut" | "staffordOut"): ImportedTagResult[] {
-  const eligible = results.filter((result) => Number.isFinite(result[input]));
-  const tags = eligible.map((result) => result[input] as number).sort((a, b) => a - b);
-  const finish = [...eligible].sort((a, b) => a.score - b.score || (a[input] as number) - (b[input] as number));
-  const assigned = new Map<string, number>();
-  finish.forEach((result, index) => assigned.set(result.playerId, tags[index]));
-  return results.map((result) => ({ ...result, [output]: assigned.get(result.playerId) }));
-}
-
-function scoreLabel(score: number): string {
-  return score > 0 ? `+${score}` : String(score);
-}
-
 export const LeagueOperationsDemo: React.FC = () => {
   const [players, setPlayers] = useState<LeagueCheckIn[]>(() => loadLeagueCheckIns());
-  const [checkInClosed, setCheckInClosed] = useState(false);
+  const [checkInClosed, setCheckInClosed] = useState(() => loadMembers().locked);
   const [targetCardSize, setTargetCardSize] = useState(3);
   const [firstHole, setFirstHole] = useState(1);
   const [cards, setCards] = useState<DemoCard[]>([]);
   const [published, setPublished] = useState(false);
-  const [tagResults, setTagResults] = useState<ImportedTagResult[]>([]);
-  const [csvFileName, setCsvFileName] = useState("");
-  const [csvScoreSource, setCsvScoreSource] = useState("");
-  const [csvError, setCsvError] = useState("");
   const [copied, setCopied] = useState(false);
-  const [tagCopied, setTagCopied] = useState(false);
+  const rosterSignature = useRef(JSON.stringify(players));
 
   useEffect(() => {
-    const refresh = () => setPlayers(loadLeagueCheckIns());
+    const refresh = () => {
+      const next = loadLeagueCheckIns();
+      const signature = JSON.stringify(next);
+      if (signature !== rosterSignature.current) { setCards([]); setPublished(false); rosterSignature.current = signature; }
+      setPlayers(next); setCheckInClosed(loadMembers().locked);
+    };
     window.addEventListener(LEAGUE_CHECKIN_EVENT_KEY, refresh);
     window.addEventListener("storage", refresh);
     return () => {
@@ -281,16 +95,14 @@ export const LeagueOperationsDemo: React.FC = () => {
   const acePotCount = players.filter((player) => player.acePotPaid).length;
   const spotsyTagCount = players.filter((player) => Number.isFinite(player.spotsyTag)).length;
   const staffordTagCount = players.filter((player) => Number.isFinite(player.staffordTag)).length;
-  const spotsyDuplicates = useMemo(() => duplicateValues(tagResults.map((result) => result.spotsyTag)), [tagResults]);
-  const staffordDuplicates = useMemo(() => duplicateValues(tagResults.map((result) => result.staffordTag)), [tagResults]);
-
   const persistPlayers = (next: LeagueCheckIn[]) => { setPlayers(next); saveLeagueCheckIns(next); setCards([]); setPublished(false); };
   const updatePlayer = (id: string, patch: Partial<LeagueCheckIn>) => persistPlayers(players.map((player) => player.id === id ? { ...player, ...patch } : player));
   const loadDemoRoster = () => { persistPlayers(buildDemoCheckIns()); setCheckInClosed(false); };
-  const clearRoster = () => { persistPlayers([]); setCheckInClosed(false); setTagResults([]); };
+  const clearRoster = () => { persistPlayers([]); setCheckInClosed(false); saveMembers({ ...loadMembers(), locked: false }); };
   const generateCards = () => {
     if (!players.length) return;
     setCheckInClosed(true);
+    saveMembers({ ...loadMembers(), locked: true });
     setCards(buildCards(players, targetCardSize, firstHole));
     setPublished(false);
   };
@@ -319,90 +131,38 @@ export const LeagueOperationsDemo: React.FC = () => {
     try { await navigator.clipboard.writeText(`6:00 PM SHOTGUN CALL-OUT\n${calloutText}`); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { setCopied(false); }
   };
 
-  const copyTagCallout = async () => {
-    const spotsy = tagResults
-      .filter((result) => Number.isFinite(result.spotsyOut))
-      .sort((a, b) => (a.spotsyOut as number) - (b.spotsyOut as number))
-      .map((result) => `#${result.spotsyOut} — ${result.name}`)
-      .join("\n");
-    const stafford = tagResults
-      .filter((result) => Number.isFinite(result.staffordOut))
-      .sort((a, b) => (a.staffordOut as number) - (b.staffordOut as number))
-      .map((result) => `#${result.staffordOut} — ${result.name}`)
-      .join("\n");
-    const sections = [
-      spotsy ? `SPOTSY TAGS\n${spotsy}` : "",
-      stafford ? `STAFFORD TAGS\n${stafford}` : "",
-    ].filter(Boolean).join("\n\n");
-    try {
-      await navigator.clipboard.writeText(`BAG TAG CALL-OUT\n${sections}`);
-      setTagCopied(true);
-      setTimeout(() => setTagCopied(false), 1500);
-    } catch {
-      setTagCopied(false);
-    }
-  };
-
-  const loadCsvText = (text: string, fileName: string) => {
-    const imported = importUDiscCsv(text, players);
-    setCsvError(imported.error ?? "");
-    setCsvFileName(imported.error ? "" : fileName);
-    setCsvScoreSource(imported.scoreSource ?? "");
-    if (imported.error) {
-      setTagResults([]);
-      return;
-    }
-
-    const spotsyDupes = duplicateValues(imported.results.map((result) => result.spotsyTag));
-    const staffordDupes = duplicateValues(imported.results.map((result) => result.staffordTag));
-    if (spotsyDupes.length || staffordDupes.length) {
-      setTagResults(imported.results);
-      return;
-    }
-
-    setTagResults(assignTagPool(assignTagPool(imported.results, "spotsyTag", "spotsyOut"), "staffordTag", "staffordOut"));
-  };
-
-  const handleCsvUpload = async (file?: File) => {
-    if (!file) return;
-    try { loadCsvText(await file.text(), file.name); } catch { setCsvError("The selected CSV could not be read."); setTagResults([]); }
-  };
-
-  const hasOversizeException = targetCardSize === 3 && cards.some((card) => card.players.length > 3);
+  const hasOversizeException = targetCardSize === 3 && cards.some(card => card.players.length > 3);
   const usesSecondHoleWave = cards.length > 9;
-  const aces = tagResults.filter((result) => result.aceHoles.length > 0);
-  const eligibleAces = aces.filter((result) => result.acePotPaid);
-  const unpaidAces = aces.filter((result) => !result.acePotPaid);
-  const aceShare = eligibleAces.length ? 100 / eligibleAces.length : 0;
-  const tagsAssigned = tagResults.some((result) => Number.isFinite(result.spotsyOut) || Number.isFinite(result.staffordOut));
+  const validCards = cards.length > 0 && cards.length <= 18 && new Set(cards.map(c => c.hole)).size === cards.length && cards.every(c => c.players.length > 0 && c.players.length <= 4);
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
-        <div className="flex items-start gap-2"><Info className="mt-0.5 h-4 w-4 shrink-0" /><div><p className="font-bold">Concept demo with the intended league-night workflow.</p><p className="mt-1 leading-relaxed">QR check-in is implemented as a player-facing screen. This GitHub Pages demo stores the roster locally; production needs a secured shared store so player-phone scans synchronize to the organizer device.</p><p className="mt-1 leading-relaxed"><strong>Demo data:</strong> player names, divisions and UDisc results come from the Aug. 27, 2026 league round. Incoming bag-tag numbers and ace-pot entries are illustrative values because UDisc does not contain them.</p></div></div>
+        <div className="flex items-start gap-2"><Info className="mt-0.5 h-4 w-4 shrink-0" /><div><p className="font-bold">Concept demo with the intended league-night workflow.</p><p className="mt-1 leading-relaxed">QR opens the member-facing demo. Scanning on another device creates a separate local roster. This GitHub Pages demo stores the roster locally; production needs a secured shared store so player-phone scans synchronize to the organizer device.</p><p className="mt-1 leading-relaxed"><strong>Demo data:</strong> all participants, identities, results and payments are synthetic. Sample times are a discussion aid, not verified club policy.</p></div></div>
       </div>
 
+      <MemberLeagueDemo staff />
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 card-shadow">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-green-700"><QrCode className="h-4 w-4" />Before 5:45 PM · player QR check-in</div><h2 className="mt-1 text-lg font-extrabold text-slate-900">League Check-In</h2><p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-600">Players scan at the table and submit name, PDGA division, ace-pot status, Spotsy tag and/or Stafford tag. Building cards locks the roster for the 5:45 close.</p></div>
+          <div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-green-700"><QrCode className="h-4 w-4" />Before 5:45 PM · player QR check-in</div><h2 className="mt-1 text-lg font-extrabold text-slate-900">League Check-In</h2><p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-600">Returning members reuse their profile; staff can add walk-ups without an account. Payment confirmation is an organizer action. Building cards locks the roster for the 5:45 close.</p></div>
           <div className="rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm"><QRCodeSVG value={checkInUrl} size={148} level="M" marginSize={2} /><a href={checkInUrl} target="_blank" rel="noreferrer" className="mt-2 block text-[10px] font-bold text-green-700 hover:underline">Open player check-in preview</a></div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           <Metric value={players.length} label="Checked in" />
-          <Metric value={acePotCount} label="Ace pot paid" className="text-amber-700" />
+          <Metric value={acePotCount} label="Staff confirmed ace pot" className="text-amber-700" />
           <Metric value={spotsyTagCount} label="Spotsy tags" className="text-green-700" />
           <Metric value={staffordTagCount} label="Stafford tags" className="text-blue-700" />
           <div className={`rounded-xl p-3 text-center ring-1 ${checkInClosed ? "bg-rose-50 ring-rose-200" : "bg-green-50 ring-green-200"}`}><p className="text-sm font-extrabold text-slate-900">{checkInClosed ? "LOCKED" : "OPEN"}</p><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">5:45 check-in</p></div>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button onClick={loadDemoRoster} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">Load Aug 27 roster · {DEMO_CHECKIN_COUNT}</button>
+          <button onClick={loadDemoRoster} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">Load synthetic roster · {DEMO_CHECKIN_COUNT}</button>
           <button onClick={clearRoster} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50"><RotateCcw className="mr-1 inline h-3.5 w-3.5" />Clear</button>
-          <button onClick={() => { setCheckInClosed((value) => !value); setCards([]); setPublished(false); }} className={`ml-auto rounded-lg px-3 py-2 text-xs font-bold ${checkInClosed ? "bg-green-100 text-green-800" : "bg-slate-900 text-white"}`}><Lock className="mr-1 inline h-3.5 w-3.5" />{checkInClosed ? "Reopen check-in" : "Close check-in · 5:45"}</button>
+          <button onClick={() => { const locked = !loadMembers().locked; saveMembers({ ...loadMembers(), locked }); setCheckInClosed(locked); setCards([]); setPublished(false); }} className={`ml-auto rounded-lg px-3 py-2 text-xs font-bold ${checkInClosed ? "bg-green-100 text-green-800" : "bg-slate-900 text-white"}`}><Lock className="mr-1 inline h-3.5 w-3.5" />{checkInClosed ? "Reopen check-in" : "Close check-in · 5:45"}</button>
         </div>
 
-        {players.length > 0 && <RosterTable players={players} checkInClosed={checkInClosed} updatePlayer={updatePlayer} />}
+        {players.length > 0 && <RosterTable players={players} checkInClosed={checkInClosed} updatePlayer={updatePlayer} removePlayer={id => persistPlayers(players.filter(p => p.id !== id))} />}
       </section>
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 card-shadow">
@@ -413,7 +173,7 @@ export const LeagueOperationsDemo: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Metric value={players.length} label="Roster" />
-          <label className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200"><span className="block text-[10px] font-bold uppercase text-slate-500">Target card size</span><select value={targetCardSize} onChange={(event) => { setTargetCardSize(Number(event.target.value)); setCards([]); }} className="mt-1 w-full bg-transparent text-lg font-extrabold outline-none"><option value={3}>3 · fastest</option><option value={4}>4</option><option value={5}>5</option></select></label>
+          <label className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200"><span className="block text-[10px] font-bold uppercase text-slate-500">Target card size</span><select value={targetCardSize} onChange={(event) => { setTargetCardSize(Number(event.target.value)); setCards([]); }} className="mt-1 w-full bg-transparent text-lg font-extrabold outline-none"><option value={3}>3 · fastest</option><option value={4}>4</option></select></label>
           <label className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200"><span className="block text-[10px] font-bold uppercase text-slate-500">First starting hole</span><select value={firstHole} onChange={(event) => { setFirstHole(Number(event.target.value)); setCards([]); }} className="mt-1 w-full bg-transparent text-lg font-extrabold outline-none">{HOLES.map((hole) => <option key={hole} value={hole}>Hole {hole}</option>)}</select></label>
           <Metric value={cards.length || "—"} label="Cards" />
         </div>
@@ -423,75 +183,20 @@ export const LeagueOperationsDemo: React.FC = () => {
         {hasOversizeException && <p className="text-[11px] font-semibold text-amber-700">This roster needs one or two 4-person exceptions; the remaining cards stay at three whenever possible.</p>}
         {usesSecondHoleWave && <p className="text-[11px] font-semibold text-amber-700">More than nine cards are in the field, so after the first every-other-hole wave the remaining unused holes are filled. All starting holes remain unique through 18 cards.</p>}
 
-        {cards.length > 0 && <div className="flex justify-end"><button onClick={() => setPublished(true)} className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white"><CheckCircle2 className="h-3.5 w-3.5" />Finalize for 6:00</button></div>}
+        {cards.length > 0 && !validCards && <p className="text-sm font-bold text-rose-700">Fix empty or oversized cards and duplicate starting holes before finalizing. Maximum 18 cards.</p>}
+        {cards.length > 0 && <div className="flex justify-end"><button disabled={!validCards} onClick={() => setPublished(true)} className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white"><CheckCircle2 className="h-3.5 w-3.5" />Finalize for 6:00</button></div>}
         {published && cards.length > 0 && <Callout cards={cards} copied={copied} copyCallout={copyCallout} />}
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 card-shadow">
-        <div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-700"><Tags className="h-4 w-4" />After round · UDisc → tags + ace pot</div><h2 className="mt-1 text-lg font-extrabold text-slate-900">Post-Round Settlement</h2><p className="mt-1 max-w-2xl text-xs text-slate-600">UDisc remains the score system of record. Upload the completed CSV once: the app immediately reassigns Spotsy and Stafford tags, checks every hole for aces, and builds the bag-tag call-out. Ace-pot eligibility comes from check-in. The built-in sample is the Aug. 27, 2026 league export.</p></div>
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-center"><label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-teal-200 bg-teal-50 px-4 py-4 text-teal-900"><FileUp className="h-6 w-6" /><span><span className="block text-sm font-extrabold">Import UDisc CSV</span><span className="block text-[11px] text-teal-800">Upload once — scores, aces and bag tags settle automatically.</span></span><input type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => handleCsvUpload(event.target.files?.[0])} /></label><button onClick={() => loadCsvText(DEMO_UDISC_CSV, "spotsy-summer-league-2026-2026-08-27.csv")} className="rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-bold text-white">Load Aug 27 UDisc sample</button></div>
-        {csvError && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">{csvError}</div>}
-        {(spotsyDuplicates.length > 0 || staffordDuplicates.length > 0) && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800">Duplicate tag numbers detected: {spotsyDuplicates.length ? `Spotsy ${spotsyDuplicates.map((tag) => `#${tag}`).join(", ")}` : ""}{spotsyDuplicates.length && staffordDuplicates.length ? " · " : ""}{staffordDuplicates.length ? `Stafford ${staffordDuplicates.map((tag) => `#${tag}`).join(", ")}` : ""}. Fix the check-in roster and import the CSV again.</div>}
-        {tagResults.length > 0 && <AcePotSettlement eligibleAces={eligibleAces} unpaidAces={unpaidAces} aceShare={aceShare} paidCount={acePotCount} />}
-        {tagsAssigned && <BagTagCallout results={tagResults} copied={tagCopied} copyCallout={copyTagCallout} />}
-        {tagResults.length > 0 ? <TagResults results={tagResults} fileName={csvFileName} scoreSource={csvScoreSource} /> : <div className="rounded-xl border border-dashed border-slate-300 p-7 text-center text-xs text-slate-500">Import the completed UDisc CSV after the round. The check-in roster supplies the tags and ace-pot eligibility.</div>}
-      </section>
+      <ResultsImportDemo />
     </div>
   );
 };
 
 const Metric: React.FC<{ value: React.ReactNode; label: string; className?: string }> = ({ value, label, className = "" }) => <div className="rounded-xl bg-slate-50 p-3 text-center ring-1 ring-slate-200"><p className={`text-2xl font-extrabold text-slate-900 ${className}`}>{value}</p><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</p></div>;
 
-const RosterTable: React.FC<{ players: LeagueCheckIn[]; checkInClosed: boolean; updatePlayer: (id: string, patch: Partial<LeagueCheckIn>) => void }> = ({ players, checkInClosed, updatePlayer }) => <div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[760px] text-left text-xs"><thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500"><tr><th className="px-3 py-2">Player</th><th className="px-3 py-2">Division</th><th className="px-3 py-2">Spotsy tag</th><th className="px-3 py-2">Stafford tag</th><th className="px-3 py-2">Ace pot</th><th className="px-3 py-2">Check-in</th></tr></thead><tbody>{players.map((player) => <tr key={player.id} className="border-t border-slate-100"><td className="px-3 py-2 font-bold text-slate-900">{player.name}</td><td className="px-3 py-2"><select value={player.division} disabled={checkInClosed} onChange={(event) => updatePlayer(player.id, { division: event.target.value })} className="rounded border border-slate-300 bg-white px-2 py-1">{DEMO_DIVISIONS.map((division) => <option key={division}>{division}</option>)}</select></td><td className="px-3 py-2">{player.spotsyTag ?? "—"}</td><td className="px-3 py-2">{player.staffordTag ?? "—"}</td><td className="px-3 py-2"><label className="flex items-center gap-1.5"><input type="checkbox" checked={player.acePotPaid} disabled={checkInClosed} onChange={(event) => updatePlayer(player.id, { acePotPaid: event.target.checked })} /><span>{player.acePotPaid ? "Paid" : "No"}</span></label></td><td className="px-3 py-2 text-slate-500">{new Date(player.checkedInAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</td></tr>)}</tbody></table></div>;
+const RosterTable: React.FC<{ players: LeagueCheckIn[]; checkInClosed: boolean; updatePlayer: (id: string, patch: Partial<LeagueCheckIn>) => void; removePlayer: (id: string) => void }> = ({ players, checkInClosed, updatePlayer, removePlayer }) => <div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[760px] text-left text-xs"><thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500"><tr><th className="px-3 py-2">Player</th><th className="px-3 py-2">Division</th><th className="px-3 py-2">Spotsy tag</th><th className="px-3 py-2">Stafford tag</th><th className="px-3 py-2">Staff confirms ace pot</th><th className="px-3 py-2">Check-in</th></tr></thead><tbody>{players.map((player) => <tr key={player.id} className="border-t border-slate-100"><td className="px-3 py-2 font-bold text-slate-900">{player.name}<code className="block text-[10px] font-normal text-slate-500">{player.id}</code></td><td className="px-3 py-2"><select value={player.division} disabled={checkInClosed} onChange={(event) => updatePlayer(player.id, { division: event.target.value })} className="rounded border border-slate-300 bg-white px-2 py-1">{DEMO_DIVISIONS.map((division) => <option key={division}>{division}</option>)}</select></td><td className="px-3 py-2">{player.spotsyTag ?? "—"}</td><td className="px-3 py-2">{player.staffordTag ?? "—"}</td><td className="px-3 py-2"><label className="flex items-center gap-1.5"><input aria-label={"Confirm ace pot for " + player.id} type="checkbox" checked={player.acePotPaid} disabled={checkInClosed} onChange={(event) => updatePlayer(player.id, { acePotPaid: event.target.checked })} /><span>{player.acePotPaid ? "Confirmed" : "Unconfirmed"}</span></label></td><td className="px-3 py-2 text-slate-500">{new Date(player.checkedInAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}<button disabled={checkInClosed} className="ml-2 text-rose-700 underline" onClick={() => removePlayer(player.id)}>Remove attendee</button></td></tr>)}</tbody></table></div>;
 
 const CardGrid: React.FC<{ cards: DemoCard[]; movePlayer: (playerId: string, destinationCardId: string) => void; updateHole: (cardId: string, hole: number) => void }> = ({ cards, movePlayer, updateHole }) => <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{cards.map((card, cardIndex) => <div key={card.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="mb-3 flex items-center justify-between"><div><p className="text-xs font-bold uppercase text-slate-500">Card {cardIndex + 1} · {card.division}</p><p className="text-sm font-extrabold">{card.players.length} players</p></div><label className="text-[10px] font-bold uppercase text-slate-500">Hole <select value={card.hole} onChange={(event) => updateHole(card.id, Number(event.target.value))} className="ml-1 rounded border border-slate-300 bg-white px-2 py-1 text-sm font-extrabold text-slate-900">{HOLES.map((hole) => <option key={hole} value={hole}>{hole}</option>)}</select></label></div><div className="space-y-2">{card.players.map((player) => <div key={player.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2"><div><p className="text-xs font-bold">{player.name}</p><p className="text-[10px] text-slate-500">{player.division} · Spotsy {player.spotsyTag ?? "—"} · Stafford {player.staffordTag ?? "—"} · Ace {player.acePotPaid ? "✓" : "—"}</p></div><select value={card.id} onChange={(event) => movePlayer(player.id, event.target.value)} className="rounded border border-slate-300 bg-white px-1.5 py-1 text-[10px] font-bold">{cards.map((destination, destinationIndex) => <option key={destination.id} value={destination.id}>Card {destinationIndex + 1}</option>)}</select></div>)}</div></div>)}</div>;
 
 const Callout: React.FC<{ cards: DemoCard[]; copied: boolean; copyCallout: () => void }> = ({ cards, copied, copyCallout }) => <div className="rounded-xl border border-green-300 bg-green-50 p-4"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2 text-xs font-bold uppercase text-green-800"><Clock3 className="h-4 w-4" />6:00 PM shotgun call-out order</div><p className="mt-1 text-[11px] text-green-800">Call the every-other-hole assignments in this order, then send each card out.</p></div><button onClick={copyCallout} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-green-800 ring-1 ring-green-300"><ClipboardCopy className="mr-1 inline h-3.5 w-3.5" />{copied ? "Copied" : "Copy call-out"}</button></div><ol className="mt-3 space-y-2">{cards.map((card, index) => <li key={card.id} className="rounded-lg bg-white px-3 py-2 text-xs text-slate-800"><strong>{index + 1}. Hole {card.hole} — {card.division}:</strong> {card.players.map((player) => player.name).join(", ")}</li>)}</ol></div>;
-
-const AcePotSettlement: React.FC<{ eligibleAces: ImportedTagResult[]; unpaidAces: ImportedTagResult[]; aceShare: number; paidCount: number }> = ({ eligibleAces, unpaidAces, aceShare, paidCount }) => <div className="rounded-xl border border-amber-200 bg-amber-50 p-4"><div className="flex items-start gap-2"><Zap className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" /><div className="min-w-0 flex-1"><p className="text-xs font-extrabold uppercase tracking-wider text-amber-900">Ace Pot Check</p><p className="mt-1 text-[11px] text-amber-800">{paidCount} players entered the ace pot at check-in.</p>{eligibleAces.length > 0 ? <div className="mt-3"><p className="text-sm font-extrabold text-amber-950">{eligibleAces.length} eligible ace{eligibleAces.length === 1 ? "" : "s"} → {aceShare.toFixed(eligibleAces.length === 3 ? 2 : 1)}% of the pot each</p><ul className="mt-2 space-y-1 text-xs text-amber-900">{eligibleAces.map((result) => <li key={result.playerId}><strong>{result.name}</strong> — {result.aceHoles.join(", ")}</li>)}</ul></div> : <p className="mt-2 text-sm font-bold text-amber-900">No eligible ace detected. Pot carries forward.</p>}{unpaidAces.length > 0 && <div className="mt-3 rounded-lg bg-white/70 p-2 text-[11px] text-amber-900"><strong>Ace detected, not pot-eligible:</strong> {unpaidAces.map((result) => `${result.name} (${result.aceHoles.join(", ")})`).join(" · ")}</div>}</div></div></div>;
-
-const BagTagCallout: React.FC<{ results: ImportedTagResult[]; copied: boolean; copyCallout: () => void }> = ({ results, copied, copyCallout }) => {
-  const spotsy = results
-    .filter((result) => Number.isFinite(result.spotsyOut))
-    .sort((a, b) => (a.spotsyOut as number) - (b.spotsyOut as number));
-  const stafford = results
-    .filter((result) => Number.isFinite(result.staffordOut))
-    .sort((a, b) => (a.staffordOut as number) - (b.staffordOut as number));
-
-  return (
-    <div className="rounded-2xl border-2 border-green-300 bg-green-50 p-4 shadow-sm sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-green-800"><Trophy className="h-4 w-4" />Bag Tag Call-Out</div>
-          <p className="mt-1 text-sm font-extrabold text-green-950">Tags are assigned. Read straight down the screen while handing them out.</p>
-          <p className="mt-1 text-[11px] text-green-800">Lower tag number first. Incoming tag is shown underneath for a quick handoff check.</p>
-        </div>
-        <button onClick={copyCallout} className="w-full rounded-lg bg-white px-3 py-2.5 text-xs font-bold text-green-800 ring-1 ring-green-300 sm:w-auto"><ClipboardCopy className="mr-1 inline h-3.5 w-3.5" />{copied ? "Copied" : "Copy tag call-out"}</button>
-      </div>
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        {spotsy.length > 0 && <div className="rounded-xl border border-green-200 bg-white/70 p-3">
-          <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-extrabold text-green-950">Spotsy Tags</h3><span className="rounded-full bg-green-100 px-2 py-1 text-[10px] font-bold text-green-800">{spotsy.length} tags</span></div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            {spotsy.map((result) => <div key={`spotsy-${result.playerId}`} className="flex min-h-16 items-center gap-3 rounded-xl border border-green-100 bg-white p-3 shadow-sm">
-              <div className="flex h-12 min-w-12 items-center justify-center rounded-full bg-green-700 text-lg font-black text-white">#{result.spotsyOut}</div>
-              <div className="min-w-0"><p className="truncate text-sm font-extrabold text-slate-950">{result.name}</p><p className="text-[11px] font-semibold text-slate-500">{scoreLabel(result.score)} · brought #{result.spotsyTag}</p></div>
-            </div>)}
-          </div>
-        </div>}
-
-        {stafford.length > 0 && <div className="rounded-xl border border-blue-200 bg-white/70 p-3">
-          <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-extrabold text-blue-950">Stafford Tags</h3><span className="rounded-full bg-blue-100 px-2 py-1 text-[10px] font-bold text-blue-800">{stafford.length} tags</span></div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            {stafford.map((result) => <div key={`stafford-${result.playerId}`} className="flex min-h-16 items-center gap-3 rounded-xl border border-blue-100 bg-white p-3 shadow-sm">
-              <div className="flex h-12 min-w-12 items-center justify-center rounded-full bg-blue-700 text-lg font-black text-white">#{result.staffordOut}</div>
-              <div className="min-w-0"><p className="truncate text-sm font-extrabold text-slate-950">{result.name}</p><p className="text-[11px] font-semibold text-slate-500">{scoreLabel(result.score)} · brought #{result.staffordTag}</p></div>
-            </div>)}
-          </div>
-        </div>}
-      </div>
-    </div>
-  );
-};
-
-const TagResults: React.FC<{ results: ImportedTagResult[]; fileName: string; scoreSource: string }> = ({ results, fileName, scoreSource }) => <div className="space-y-3"><div className="grid grid-cols-2 gap-3 sm:grid-cols-4"><Metric value={fileName} label="File" /><Metric value={results.length} label="Players" /><Metric value={scoreSource} label="Score field" /><Metric value="Automatic" label="Tag assignment" /></div><div className="overflow-x-auto rounded-xl border border-slate-200"><table className="w-full min-w-[860px] text-left text-xs"><thead className="bg-slate-50 text-[10px] font-bold uppercase text-slate-500"><tr><th className="px-3 py-2">Finish</th><th className="px-3 py-2">Player</th><th className="px-3 py-2">Score</th><th className="px-3 py-2">Ace</th><th className="px-3 py-2">Spotsy in</th><th className="px-3 py-2">Spotsy out</th><th className="px-3 py-2">Stafford in</th><th className="px-3 py-2">Stafford out</th></tr></thead><tbody>{results.map((result, index) => <tr key={result.playerId} className="border-t border-slate-100"><td className="px-3 py-2 font-extrabold text-slate-500">{index + 1}</td><td className="px-3 py-2 font-bold">{result.name}</td><td className="px-3 py-2">{result.score}</td><td className="px-3 py-2 font-bold text-amber-700">{result.aceHoles.length ? `${result.aceHoles.join(", ")}${result.acePotPaid ? " ✓" : " (not entered)"}` : "—"}</td><td className="px-3 py-2">{result.spotsyTag ?? "—"}</td><td className="px-3 py-2 font-extrabold text-green-700">{result.spotsyOut ?? "—"}</td><td className="px-3 py-2">{result.staffordTag ?? "—"}</td><td className="px-3 py-2 font-extrabold text-blue-700">{result.staffordOut ?? "—"}</td></tr>)}</tbody></table></div><div className="rounded-xl border border-teal-200 bg-teal-50 p-4"><p className="text-xs font-bold text-teal-900">Bag tags assigned automatically on import</p><p className="mt-1 text-[11px] text-teal-800">For each league separately, lowest score receives the lowest submitted tag; ties currently break by incoming tag. No second settlement action is required.</p></div></div>;

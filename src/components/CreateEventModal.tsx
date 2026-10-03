@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CategoryType, Course, Event } from "../types";
 import { db } from "../lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc } from "../lib/demoDatabase";
 import { X, Calendar, MapPin, Tag, AlignLeft, ShieldCheck, Layers, Wand2 } from "lucide-react";
 
 interface CreateEventModalProps {
@@ -26,6 +26,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   const [layout, setLayout] = useState(selectedCourse?.layouts[0] || "");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [time, setTime] = useState("18:00");
+  const [officialUrl, setOfficialUrl] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -56,6 +57,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     setLayout(courses[0]?.layouts[0] || "");
     setTime("18:00");
     setDescription("");
+    setOfficialUrl("");
     setErrorMsg("");
   };
 
@@ -70,6 +72,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     setErrorMsg("");
 
     try {
+      if (officialUrl && !/^https:\/\//i.test(officialUrl)) throw new Error("Quicklink must be an HTTPS URL");
       const startDateTimeIso = new Date(`${date}T${time}:00`).toISOString();
       const event: Event = {
         id: `demo-event-${Date.now()}`,
@@ -79,12 +82,13 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         layout: layout || undefined,
         startDateTime: startDateTimeIso,
         description: description.trim(),
-        isOfficial: !onCreateEvent,
-        isDemo: Boolean(onCreateEvent),
+        officialUrl: officialUrl || undefined,
+        isOfficial: false,
+        isDemo: true,
       };
 
       if (onCreateEvent) {
-        onCreateEvent(event);
+        await onCreateEvent(event);
       } else {
         await addDoc(collection(db, "events"), {
           title: event.title,
@@ -93,7 +97,9 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
           layout: event.layout || null,
           startDateTime: event.startDateTime,
           description: event.description,
-          isOfficial: true,
+          isOfficial: false,
+          isDemo: true,
+          officialUrl: officialUrl || undefined,
           createdAt: new Date().toISOString(),
         });
       }
@@ -173,9 +179,9 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Check-in, fees, divisions, format, or other current details..." rows={3} required className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-3">
+          <label className="block text-xs text-slate-300">Event quicklink (optional; sample links only)<input type="url" value={officialUrl} onChange={e => setOfficialUrl(e.target.value)} placeholder="https://example.com/udisc/sample-event" className="mt-1 w-full rounded border border-slate-700 bg-slate-800 p-3 text-white" /></label><div className="pt-2 flex items-center justify-end gap-3">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition">Cancel</button>
-            <button type="submit" disabled={submitting} className="px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-900/40 transition disabled:opacity-50">{submitting ? "Saving..." : onCreateEvent ? "Add Demo Event" : "Publish Event"}</button>
+            <button type="submit" disabled={submitting} className="px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-900/40 transition disabled:opacity-50">{submitting ? "Saving..." : onCreateEvent ? "Add Demo Event" : "Save Demo Event"}</button>
           </div>
         </form>
       </div>

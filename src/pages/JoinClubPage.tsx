@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { db } from "../lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc } from "../lib/demoDatabase";
 import {
   Sparkles,
   ShieldCheck,
@@ -125,9 +125,9 @@ export const JoinClubPage: React.FC = () => {
             <span className="w-5 h-5 rounded-full bg-green-600 text-white font-bold inline-flex items-center justify-center text-xs">
               1
             </span>
-            <h4 className="font-bold text-slate-900 text-xs">Send $25 Dues</h4>
+            <h4 className="font-bold text-slate-900 text-xs">Confirm dues with the treasurer</h4>
             <p className="text-slate-600 leading-relaxed">
-              Pay via Venmo (<strong className="text-green-700">@SpotsyDiscGolf</strong>) or PayPal (<strong className="text-green-700">treasurer@spotsydiscgolf.org</strong>). Include your name and email.
+              Demo payment instructions are intentionally withheld. The treasurer must confirm the official amount, membership period, benefits and approved payment channel. Demo login and payment requests do not establish paid membership.
             </p>
           </div>
 
@@ -162,7 +162,7 @@ export const JoinClubPage: React.FC = () => {
           <div>
             <h3 className="text-base font-bold text-slate-900">Don't Use Facebook? Get Email Updates!</h3>
             <p className="text-xs text-slate-500">
-              Subscribe for direct club announcements, course closure alerts, and tournament registration openings.
+              Concept: a non-Facebook announcement pathway. Use a fictional email for the local form; delivery and consent handling require future club approval.
             </p>
           </div>
         </div>
@@ -170,7 +170,7 @@ export const JoinClubPage: React.FC = () => {
         {subscribed ? (
           <div className="bg-green-50 border border-green-200 p-3 rounded-lg flex items-center gap-2 text-xs text-green-800 font-medium">
             <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-            <span>Subscribed! You will receive official Spotsy Disc Golf emails.</span>
+            <span>Sample interest saved on this browser. No subscription or email delivery was created.</span>
           </div>
         ) : (
           <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2 pt-1">
@@ -178,7 +178,7 @@ export const JoinClubPage: React.FC = () => {
               type="email"
               value={subEmail}
               onChange={(e) => setSubEmail(e.target.value)}
-              placeholder="Enter your email address..."
+              placeholder="sample@example.com"
               required
               className="flex-1 bg-slate-50 border border-slate-300 text-slate-900 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-green-500"
             />
@@ -188,7 +188,7 @@ export const JoinClubPage: React.FC = () => {
               className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2 rounded-lg text-xs flex items-center justify-center gap-1.5 transition disabled:opacity-50 shrink-0"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>{submitting ? "Subscribing..." : "Subscribe"}</span>
+              <span>{submitting ? "Saving sample..." : "Save demo interest"}</span>
             </button>
           </form>
         )}

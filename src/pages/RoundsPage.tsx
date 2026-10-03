@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { CreateRoundModal } from "../components/CreateRoundModal";
 import { RoundChatThread } from "../components/RoundChatThread";
 import { db } from "../lib/firebase";
-import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove } from "../lib/demoDatabase";
 import {
   Users,
   Plus,
@@ -64,7 +64,7 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
       };
     }
 
-    if (round.participantIds?.length >= round.maxCapacity) {
+    if (round.status !== "open" || round.participantIds?.includes(profile.uid) || round.participantIds?.length >= round.maxCapacity) {
       alert("This casual round card is already full!");
       return;
     }
@@ -132,7 +132,7 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
             Spotsylvania Casual Rounds
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 mt-1">
-            Post an open card, join local players at Loriella or Pratt, and coordinate tee times in real-time.
+            Post an open card, join local players at Loriella or Pratt, and coordinate tee times locally in this demo.
           </p>
         </div>
 
@@ -339,7 +339,7 @@ export const RoundsPage: React.FC<RoundsPageProps> = ({
 
                   {canManage && (
                     <div className="flex items-center gap-2">
-                      {round.status === "open" && (
+                      {(round.status === "open" || round.status === "full") && (
                         <>
                           <button
                             onClick={() => handleUpdateStatus(round.id, "completed")}

@@ -8,7 +8,7 @@ import {
   orderBy,
   onSnapshot,
   addDoc,
-} from "firebase/firestore";
+} from "../lib/demoDatabase";
 import { MessageSquare, Send, Lock, AlertCircle } from "lucide-react";
 
 interface RoundChatThreadProps {
@@ -25,10 +25,11 @@ export const RoundChatThread: React.FC<RoundChatThreadProps> = ({ round }) => {
   const currentUserId = userProfile?.uid || "";
   const isAdmin = userProfile?.role === "club_admin";
   const isParticipant = currentUserId ? round.participantIds?.includes(currentUserId) : false;
-  const canChat = (isParticipant || isAdmin) && round.status === "open";
+  const canChat = (isParticipant || isAdmin) && (round.status === "open" || round.status === "full");
   const isReadOnly = round.status === "completed" || round.status === "cancelled";
 
   useEffect(() => {
+    if (!isParticipant && !isAdmin) { setMessages([]); setLoading(false); return; }
     // Listen to live messages subcollection /rounds/{roundId}/messages
     const messagesRef = collection(db, "rounds", round.id, "messages");
     const q = query(messagesRef, orderBy("createdAt", "asc"));
@@ -50,7 +51,7 @@ export const RoundChatThread: React.FC<RoundChatThreadProps> = ({ round }) => {
     );
 
     return () => unsubscribe();
-  }, [round.id]);
+  }, [round.id, isParticipant, isAdmin]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -58,7 +59,7 @@ export const RoundChatThread: React.FC<RoundChatThreadProps> = ({ round }) => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !canChat) return;
 
     let profile = userProfile;
     if (!profile) {
