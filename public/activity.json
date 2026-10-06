@@ -1,8 +1,16 @@
 {
   "group": "Spotsy Disc Golf Club",
   "group_url": "https://facebook.com/groups/217219268338670/",
-  "updated_at": "2026-10-06T22:51:56.539923+00:00",
+  "updated_at": "2026-10-06T23:21:56.320293+00:00",
   "posts": [
+    {
+      "id": "28629698823330668",
+      "url": "https://facebook.com/groups/spotsydgclub/permalink/28629698823330668/",
+      "created_at": "2026-10-06T18:57:17.000-04:00",
+      "text": "",
+      "reactions": 0,
+      "comments": 0
+    },
     {
       "id": "28629228170044400",
       "url": "https://facebook.com/groups/spotsydgclub/permalink/28629228170044400/",
@@ -154,14 +162,6 @@
       "text": "Just saw two juvenile copperheads left of the dogleg on hole 14 at loriella. Probably a nest somewhere around there.",
       "reactions": 7,
       "comments": 1
-    },
-    {
-      "id": "28406711848962701",
-      "url": "https://facebook.com/groups/spotsydgclub/permalink/28406711848962701/",
-      "created_at": "2026-09-19T11:57:48.000-04:00",
-      "text": "SpAm Tee time at Wilderness Ridge for Pool B at 1:15",
-      "reactions": 3,
-      "comments": 0
     }
   ]
 }
