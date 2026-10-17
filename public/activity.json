@@ -1,15 +1,23 @@
 {
   "group": "Spotsy Disc Golf Club",
   "group_url": "https://facebook.com/groups/217219268338670/",
-  "updated_at": "2026-10-17T12:21:59.885327+00:00",
+  "updated_at": "2026-10-17T12:51:56.694051+00:00",
   "posts": [
+    {
+      "id": "28779481151685767",
+      "url": "https://facebook.com/groups/spotsydgclub/permalink/28779481151685767/",
+      "created_at": "2026-10-17T08:40:17.000-04:00",
+      "text": "Don't forget to sign up for our club championship coming up. Let's close out the disc golf season with a great turnout.\n\nhttps://www.discgolfscene.com/tournaments/2026_Spotsy_Club_Championship_2026/registration",
+      "reactions": 0,
+      "comments": 0
+    },
     {
       "id": "28779198668380682",
       "url": "https://facebook.com/groups/spotsydgclub/permalink/28779198668380682/",
       "created_at": "2026-10-17T08:13:19.000-04:00",
       "text": "Reminder: if you play in/near FXBG this weekend, please BOLO for orange package like the one in THIS video, too. 😉\n\nIf you find one, keep it, and enjoy. ❤️\n\n(P.S. I still have two drops to make, and can't wait for you to find them.)",
-      "reactions": 1,
-      "comments": 1
+      "reactions": 4,
+      "comments": 2
     },
     {
       "id": "28778720755095140",
@@ -24,7 +32,7 @@
       "url": "https://facebook.com/groups/spotsydgclub/permalink/28770678342566048/",
       "created_at": "2026-10-16T15:53:27.000-04:00",
       "text": "If you play near FXBG this weekend, please BOLO for an orange package like the one in this video.\n\nIf you find it, keep it, and enjoy. ❤️",
-      "reactions": 10,
+      "reactions": 11,
       "comments": 8
     },
     {
@@ -154,14 +162,6 @@
       "text": "Yo, John Biscoe said bag tags, NOT minis.  Whose the wise guy that did this?",
       "reactions": 16,
       "comments": 13
-    },
-    {
-      "id": "28626572706976613",
-      "url": "https://facebook.com/groups/spotsydgclub/permalink/28626572706976613/",
-      "created_at": "2026-10-06T12:59:54.000-04:00",
-      "text": "",
-      "reactions": 2,
-      "comments": 0
     }
   ]
 }
