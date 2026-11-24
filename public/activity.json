@@ -1,8 +1,16 @@
 {
   "group": "Spotsy Disc Golf Club",
   "group_url": "https://facebook.com/groups/217219268338670/",
-  "updated_at": "2026-11-24T16:51:56.809205+00:00",
+  "updated_at": "2026-11-24T20:21:56.972341+00:00",
   "posts": [
+    {
+      "id": "29309795178654359",
+      "url": "https://facebook.com/groups/spotsydgclub/permalink/29309795178654359/",
+      "created_at": "2026-11-24T15:12:39.000-05:00",
+      "text": "",
+      "reactions": 0,
+      "comments": 0
+    },
     {
       "id": "29307859742181236",
       "url": "https://facebook.com/groups/spotsydgclub/permalink/29307859742181236/",
@@ -154,14 +162,6 @@
       "text": "EDIT: Tomorrow actually, Wednesday lol\n\nAnyone want to go play Jenkins Mountain Thursday before they really start packing it up? I just went yesterday, it's very much still playable",
       "reactions": 1,
       "comments": 1
-    },
-    {
-      "id": "29116775611289651",
-      "url": "https://facebook.com/groups/spotsydgclub/permalink/29116775611289651/",
-      "created_at": "2026-11-10T11:31:30.000-05:00",
-      "text": "Spots still open for the Fight Round 9 sponsored by MVP Disc Sports  November 21st and 22nd. Two courses bridging the Potomac River and twice the fun $3,000 added cash for pros and raising money for a good cause. Come on out, Noel Duke always puts on a great event with some great trophies from Roy Rountree . I hope to see you there.",
-      "reactions": 3,
-      "comments": 0
     }
   ]
 }
